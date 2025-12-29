@@ -2,7 +2,7 @@
 
 Welcome to the Kubernetes practice repository! This repository contains hands-on examples and detailed explanations for various Kubernetes concepts.
 
-## 📚 Topics Covered
+## Topics Covered
 
 This repository covers the following Kubernetes topics with practical examples:
 
@@ -72,4 +72,3 @@ Feel free to improve examples, add more use cases, or fix any issues you find!
 ## 📄 License
 
 This repository is for educational purposes.
-
