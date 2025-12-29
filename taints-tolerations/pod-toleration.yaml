@@ -1,0 +1,92 @@
+# ============================================
+# Pod with Tolerations Example
+# ============================================
+# This pod can run on nodes that have taints,
+# because it has matching tolerations.
+#
+# What this demonstrates:
+# 1. How to add tolerations to a pod
+# 2. Two different operator types (Exists vs Equal)
+# 3. How pods can run on tainted nodes
+#
+# Prerequisites:
+# - A node with taint: kubectl taint nodes <node> dedicated=special-workload:NoSchedule
+#
+# To apply: kubectl apply -f pod-toleration.yaml
+# To verify: kubectl get pod nginx-tolerated -o wide
+# ============================================
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-tolerated
+  labels:
+    app: nginx
+spec:
+  containers:
+    - name: nginx
+      image: nginx:1.21
+      ports:
+        - containerPort: 80
+
+  # ============================================
+  # Tolerations Section
+  # ============================================
+  # Tolerations allow this pod to be scheduled
+  # on nodes that have matching taints.
+  #
+  # A pod can have multiple tolerations.
+  # If ANY toleration matches a node's taint,
+  # the pod can be scheduled on that node.
+  # ============================================
+  tolerations:
+    # ============================================
+    # Toleration 1: Master Node Taint
+    # ============================================
+    # This tolerates the default master node taint.
+    # Master nodes are tainted by default to prevent
+    # regular workloads from running on them.
+    #
+    # Operator: "Exists" means:
+    # - Only checks if the KEY exists on the node
+    # - Ignores the VALUE completely
+    # - Matches: node-role.kubernetes.io/master=anything:NoSchedule
+    # ============================================
+    - key: "node-role.kubernetes.io/master"
+      operator: "Exists" # Key exists (value doesn't matter)
+      effect: "NoSchedule" # Must match taint effect
+
+    # ============================================
+    # Toleration 2: Custom Dedicated Node Taint
+    # ============================================
+    # This tolerates a custom taint for dedicated workloads.
+    #
+    # Operator: "Equal" means:
+    # - Both KEY and VALUE must match exactly
+    # - Matches: dedicated=special-workload:NoSchedule
+    # - Does NOT match: dedicated=gpu:NoSchedule (value different)
+    # - Does NOT match: special=special-workload:NoSchedule (key different)
+    # ============================================
+    - key: "dedicated"
+      operator: "Equal" # Key AND value must match
+      value: "special-workload" # Exact value required
+      effect: "NoSchedule" # Must match taint effect
+
+
+  # ============================================
+  # How to Test This:
+  # ============================================
+  # 1. Taint a node:
+  #    kubectl taint nodes <node-name> dedicated=special-workload:NoSchedule
+  #
+  # 2. Apply this pod:
+  #    kubectl apply -f pod-toleration.yaml
+  #
+  # 3. Verify it scheduled on the tainted node:
+  #    kubectl get pod nginx-tolerated -o wide
+  #
+  # 4. Try a pod WITHOUT toleration (should fail):
+  #    kubectl run test-pod --image=nginx:1.21
+  #    kubectl get pod test-pod
+  #    # Will show: Pending (can't schedule)
+  # ============================================

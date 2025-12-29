@@ -1,0 +1,68 @@
+# ============================================
+# ClusterIP Service Example
+# ============================================
+# This creates an internal service that provides
+# a stable endpoint to access your pods.
+#
+# What this does:
+# 1. Creates a stable ClusterIP (internal IP)
+# 2. Selects pods with label app=nginx
+# 3. Exposes port 80
+# 4. Load balances traffic across matching pods
+#
+# Prerequisites:
+# - Pods with label app=nginx must exist
+# - Pods should be listening on port 80
+#
+# To apply: kubectl apply -f clusterip-service.yaml
+# To view: kubectl get svc nginx-service
+# To test: kubectl run test --image=busybox --rm -it -- wget -qO- http://nginx-service
+# ============================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service        # Service name (used for DNS)
+  labels:
+    app: nginx               # Labels help organize resources
+spec:
+  # ============================================
+  # Service Type
+  # ============================================
+  type: ClusterIP            # Default type - internal only
+                             # Other types: NodePort, LoadBalancer, ExternalName
+  
+  # ============================================
+  # Port Configuration
+  # ============================================
+  ports:
+  - port: 80                 # Port the service listens on (internal)
+    targetPort: 80           # Port on the pod (where app listens)
+    protocol: TCP            # Protocol: TCP or UDP
+    name: http               # Optional: name for the port
+  
+  # ============================================
+  # Pod Selector
+  # ============================================
+  # This selects which pods are part of this service.
+  # Service will route traffic to ALL pods with these labels.
+  # IMPORTANT: Labels must match your pod labels!
+  # ============================================
+  selector:
+    app: nginx               # Only pods with app=nginx label are included
+  
+  # ============================================
+  # How It Works:
+  # ============================================
+  # 1. Service gets a stable ClusterIP (e.g., 10.96.0.1)
+  # 2. Service finds all pods with label app=nginx
+  # 3. Creates endpoints pointing to pod IPs
+  # 4. kube-proxy sets up routing rules
+  # 5. Traffic to ClusterIP is load-balanced to pods
+  #
+  # Service Discovery:
+  # - DNS name: nginx-service (same namespace)
+  # - Full DNS: nginx-service.default.svc.cluster.local
+  # - Access from pods: http://nginx-service
+  # ============================================
+

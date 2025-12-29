@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cache-pod
+  labels:
+    app: cache
+spec:
+  containers:
+  - name: redis
+    image: redis:7
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app-pod
+  labels:
+    app: webapp
+spec:
+  containers:
+  - name: app
+    image: nginx:1.21
+  affinity:
+    podAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: app
+            operator: In
+            values:
+            - cache
+        topologyKey: kubernetes.io/hostname  # Co-locate on same node
+

@@ -1,0 +1,66 @@
+# ============================================
+# Basic ConfigMap Example
+# ============================================
+# This ConfigMap stores non-sensitive configuration
+# data that can be used by pods.
+#
+# What this demonstrates:
+# 1. Simple key-value pairs
+# 2. Multi-line configuration values
+# 3. Different data types (strings, numbers)
+#
+# To apply: kubectl apply -f basic-configmap.yaml
+# To view: kubectl get configmap app-config -o yaml
+# To use: Reference in pod spec (see pod-env-configmap.yaml)
+# ============================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config              # ConfigMap name (used to reference in pods)
+  namespace: default            # Namespace (default if not specified)
+data:
+  # ============================================
+  # Simple Key-Value Pairs
+  # ============================================
+  # These are simple string values that can be
+  # used as environment variables in pods.
+  # ============================================
+  database_url: "postgresql://localhost:5432/mydb"  # Database connection string
+  log_level: "info"                                 # Logging level
+  max_connections: "100"                           # Maximum connections (as string)
+  
+  # ============================================
+  # Multi-line Values
+  # ============================================
+  # Use the pipe (|) symbol for multi-line values.
+  # This is useful for configuration files.
+  # The key becomes the filename when mounted as volume.
+  # ============================================
+  app.properties: |
+    server.port=8080
+    server.host=0.0.0.0
+    app.name=my-application
+    app.version=1.0.0
+  
+  # ============================================
+  # How to Use This ConfigMap:
+  # ============================================
+  # Method 1: As Environment Variables
+  #   env:
+  #   - name: DATABASE_URL
+  #     valueFrom:
+  #       configMapKeyRef:
+  #         name: app-config
+  #         key: database_url
+  #
+  # Method 2: As Volume (Files)
+  #   volumes:
+  #   - name: config-volume
+  #     configMap:
+  #       name: app-config
+  #   volumeMounts:
+  #   - name: config-volume
+  #     mountPath: /etc/config
+  # ============================================
+
