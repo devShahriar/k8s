@@ -1,5 +1,7 @@
 # Kubernetes Practice Repository
 
+<img width="1980" height="1885" alt="image" src="https://github.com/user-attachments/assets/897f3653-9e81-4833-87f2-18fbdb401bd0" />
+
 Welcome to the Kubernetes practice repository! This repository contains hands-on examples and detailed explanations for various Kubernetes concepts.
 
 ## Topics Covered
