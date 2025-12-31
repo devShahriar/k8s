@@ -15,59 +15,59 @@
 # To see pods: kubectl get pods -l app=nginx
 # ============================================
 
-apiVersion: apps/v1          # API version for Deployment resource
-kind: Deployment              # Type of Kubernetes resource
+apiVersion: apps/v1 # API version for Deployment resource
+kind: Deployment # Type of Kubernetes resource
 metadata:
-  name: nginx-deployment      # Name of the deployment (must be unique in namespace)
-  labels:                     # Labels help organize and select resources
-    app: nginx                # Label: identifies this as an nginx app
+  name: nginx-deployment # Name of the deployment (must be unique in namespace)
+  labels: # Labels help organize and select resources
+    app: nginx # Label: identifies this as an nginx app
 spec:
   # ============================================
   # Replica Configuration
   # ============================================
-  replicas: 3                 # Desired number of pod replicas (Kubernetes will maintain this)
-  
+  replicas: 3 # Desired number of pod replicas (Kubernetes will maintain this)
+
   # ============================================
   # Pod Selector
   # ============================================
-  selector:                   # Defines which pods this deployment manages
-    matchLabels:              # Pods must have ALL these labels
-      app: nginx              # Only pods with app=nginx label are managed
-  
+  selector: # Defines which pods this deployment manages
+    matchLabels: # Pods must have ALL these labels
+      app: nginx # Only pods with app=nginx label are managed
+
   # ============================================
   # Pod Template
   # ============================================
-  template:                   # Template for creating pods
+  template: # Template for creating pods
     metadata:
-      labels:                 # Labels applied to each pod created from this template
-        app: nginx            # IMPORTANT: Must match selector.matchLabels above!
+      labels: # Labels applied to each pod created from this template
+        app: nginx # IMPORTANT: Must match selector.matchLabels above!
     spec:
       containers:
-      - name: nginx           # Container name (can have multiple containers in a pod)
-        image: nginx:1.21     # Docker image to use (nginx version 1.21)
-        
-        # ============================================
-        # Port Configuration
-        # ============================================
-        ports:
-        - containerPort: 80   # Port the container listens on (nginx default HTTP port)
-          name: http          # Optional: name for the port
-          protocol: TCP        # Protocol (TCP or UDP)
-        
-        # ============================================
-        # Resource Management
-        # ============================================
-        resources:
-          # Requests: Guaranteed resources (scheduler uses this to place pods)
-          requests:
-            memory: "64Mi"    # Request 64 Megabytes of memory
-            cpu: "100m"       # Request 100 millicores (0.1 CPU core)
-          
-          # Limits: Maximum resources (container killed if exceeded)
-          limits:
-            memory: "128Mi"   # Maximum 128 Megabytes of memory
-            cpu: "200m"       # Maximum 200 millicores (0.2 CPU core)
-        
-        # Note: If you don't set resources, pod can use unlimited resources
-        # This can cause issues in production!
+        - name: nginx # Container name (can have multiple containers in a pod)
+          image: nginx:1.21 # Docker image to use (nginx version 1.21)
 
+          # ============================================
+          # Port Configuration
+          # ============================================
+          ports:
+            - containerPort: 80 # Port the container listens on (nginx default HTTP port)
+              name: http # Optional: name for the port
+              protocol: TCP # Protocol (TCP or UDP)
+
+          # ============================================
+          # Resource Management
+          # ============================================
+          resources:
+            # Requests: Guaranteed resources (scheduler uses this to place pods)
+            requests:
+              memory: "64Mi" # Request 64 Megabytes of memory
+              cpu: "100m" # Request 100 millicores (0.1 CPU core)
+
+            # Limits: Maximum resources (container killed if exceeded)
+            limits:
+              memory: "128Mi" # Maximum 128 Megabytes of memory
+              cpu: "200m" # Maximum 200 millicores (0.2 CPU core)
+
+
+          # Note: If you don't set resources, pod can use unlimited resources
+          # This can cause issues in production!

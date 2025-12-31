@@ -1,0 +1,127 @@
+# ============================================
+# Basic Persistent Volume Example
+# ============================================
+# This creates a Persistent Volume (PV) that provides
+# storage resources to the cluster.
+#
+# What this demonstrates:
+# 1. Static provisioning (PV created manually)
+# 2. hostPath volume type (local storage)
+# 3. Access modes and reclaim policies
+# 4. Storage class configuration
+#
+# Prerequisites:
+# - Cluster with nodes that have /mnt/data directory
+# - For production, use cloud storage (EBS, GCE, etc.)
+#
+# To apply: kubectl apply -f basic-pv.yaml
+# To view: kubectl get pv
+# To check details: kubectl describe pv pv-example
+# ============================================
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-example              # PV name (must be unique in cluster)
+  labels:                       # Labels help organize and select PVs
+    type: local                 # Type of storage
+    environment: development    # Environment tag
+spec:
+  # ============================================
+  # Capacity Configuration
+  # ============================================
+  # Defines the size of the volume.
+  # PVC can request up to this amount.
+  # ============================================
+  capacity:
+    storage: 10Gi               # Total capacity: 10 Gibibytes
+                                 # Units: Gi (Gibibytes), Mi (Mebibytes), Ti (Tebibytes)
+  
+  # ============================================
+  # Access Modes
+  # ============================================
+  # Defines how the volume can be mounted:
+  # - ReadWriteOnce (RWO): Single node, read-write
+  # - ReadOnlyMany (ROX): Many nodes, read-only
+  # - ReadWriteMany (RWX): Many nodes, read-write
+  # - ReadWriteOncePod (RWOP): Single pod, read-write (K8s 1.22+)
+  #
+  # PVC must request same or subset of these modes.
+  # ============================================
+  accessModes:
+    - ReadWriteOnce             # This PV supports RWO access
+  
+  # ============================================
+  # Reclaim Policy
+  # ============================================
+  # What happens when PVC is deleted:
+  # - Retain: PV kept, data preserved (manual cleanup)
+  # - Delete: PV deleted automatically (data lost)
+  # - Recycle: Deprecated, don't use
+  #
+  # For important data, use Retain.
+  # For temporary data, use Delete.
+  # ============================================
+  persistentVolumeReclaimPolicy: Retain  # Keep PV after PVC deletion
+  
+  # ============================================
+  # Storage Class
+  # ============================================
+  # Links this PV to a storage class.
+  # PVC with matching storageClassName can bind to this PV.
+  # Empty string ("") means no storage class.
+  # ============================================
+  storageClassName: manual      # Storage class name (for static provisioning)
+  
+  # ============================================
+  # Volume Source
+  # ============================================
+  # Defines where the actual storage is.
+  # Options include:
+  # - hostPath: Local node storage (this example)
+  # - awsElasticBlockStore: AWS EBS volume
+  # - gcePersistentDisk: Google Cloud disk
+  # - azureDisk: Azure disk
+  # - nfs: Network File System
+  # - cephfs: Ceph filesystem
+  # - etc.
+  # ============================================
+  hostPath:                     # Local node storage (for development/testing)
+    path: /mnt/data             # Directory on the node
+                                 # ⚠️ WARNING: hostPath is not suitable for production!
+                                 # Use cloud storage or network storage in production.
+    type: DirectoryOrCreate     # Create directory if it doesn't exist
+                                 # Options: DirectoryOrCreate, Directory, File, FileOrCreate
+  
+  # ============================================
+  # Node Affinity (Optional)
+  # ============================================
+  # Restricts which nodes can use this PV.
+  # Useful for local storage tied to specific nodes.
+  # ============================================
+  # nodeAffinity:
+  #   required:
+  #     nodeSelectorTerms:
+  #     - matchExpressions:
+  #       - key: kubernetes.io/hostname
+  #         operator: In
+  #         values:
+  #         - node-1
+  
+  # ============================================
+  # Volume Mode (Optional)
+  # ============================================
+  # Defines if volume is a filesystem or block device.
+  # Default: Filesystem
+  # ============================================
+  # volumeMode: Filesystem      # Filesystem (default) or Block
+  
+  # ============================================
+  # Mount Options (Optional)
+  # ============================================
+  # Additional mount options for the volume.
+  # ============================================
+  # mountOptions:
+  #   - hard
+  #   - nfsvers=4.1
+

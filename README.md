@@ -6,16 +6,35 @@ Welcome to the Kubernetes practice repository! This repository contains hands-on
 
 This repository covers the following Kubernetes topics with practical examples:
 
+### Application Management
+
 1. **[Deployments](./deployments/README.md)** - Manage stateless applications with rolling updates
 2. **[StatefulSets](./statefulsets/README.md)** - Manage stateful applications with stable network identities
-3. **[Services](./services/README.md)** - Expose applications running in pods
-4. **[DaemonSets](./daemonsets/README.md)** - Run a pod on every node in the cluster
-5. **[ConfigMaps](./configmaps/README.md)** - Store non-sensitive configuration data
-6. **[Secrets](./secrets/README.md)** - Store sensitive data like passwords and tokens
-7. **[Node Selectors](./node-selectors/README.md)** - Schedule pods on specific nodes
-8. **[Taints and Tolerations](./taints-tolerations/README.md)** - Control pod scheduling with node taints
-9. **[Affinity and Anti-Affinity](./affinity-anti-affinity/README.md)** - Advanced pod scheduling rules
-10. **[Horizontal Pod Autoscaler (HPA)](./hpa/README.md)** - Automatically scale pods based on metrics
+3. **[DaemonSets](./daemonsets/README.md)** - Run a pod on every node in the cluster
+
+### Networking
+
+4. **[Services](./services/README.md)** - Expose applications running in pods
+5. **[Ingress](./ingress/README.md)** - HTTP and HTTPS routing with path and host-based rules
+
+### Storage
+
+6. **[Persistent Volumes & Claims](./persistent-volumes/README.md)** - Persistent storage for applications
+
+### Configuration
+
+7. **[ConfigMaps](./configmaps/README.md)** - Store non-sensitive configuration data
+8. **[Secrets](./secrets/README.md)** - Store sensitive data like passwords and tokens
+
+### Scheduling
+
+9. **[Node Selectors](./node-selectors/README.md)** - Schedule pods on specific nodes
+10. **[Taints and Tolerations](./taints-tolerations/README.md)** - Control pod scheduling with node taints
+11. **[Affinity and Anti-Affinity](./affinity-anti-affinity/README.md)** - Advanced pod scheduling rules
+
+### Scaling
+
+12. **[Horizontal Pod Autoscaler (HPA)](./hpa/README.md)** - Automatically scale pods based on metrics
 
 ## 🚀 Getting Started
 
@@ -49,15 +68,31 @@ kubectl describe deployment <deployment-name>
 
 We recommend following this order for beginners:
 
+### Foundation
+
 1. **Deployments** - Start here to understand basic pod management
-2. **Services** - Learn how to expose your applications
-3. **ConfigMaps & Secrets** - Understand configuration management
-4. **Node Selectors** - Learn basic scheduling
-5. **Taints & Tolerations** - Advanced scheduling concepts
-6. **Affinity & Anti-Affinity** - Fine-grained scheduling control
-7. **StatefulSets** - For stateful applications
-8. **DaemonSets** - For system-level pods
-9. **HPA** - Automatic scaling
+2. **Services** - Learn how to expose your applications internally
+3. **Ingress** - Learn HTTP/HTTPS routing and external access
+
+### Storage & Configuration
+
+4. **Persistent Volumes & Claims** - Understand persistent storage
+5. **ConfigMaps & Secrets** - Understand configuration management
+
+### Advanced Scheduling
+
+6. **Node Selectors** - Learn basic scheduling
+7. **Taints & Tolerations** - Advanced scheduling concepts
+8. **Affinity & Anti-Affinity** - Fine-grained scheduling control
+
+### Specialized Workloads
+
+9. **StatefulSets** - For stateful applications (uses PVCs)
+10. **DaemonSets** - For system-level pods
+
+### Automation
+
+11. **HPA** - Automatic scaling
 
 ## 📝 Notes
 

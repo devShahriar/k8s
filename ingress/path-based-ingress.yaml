@@ -1,0 +1,105 @@
+# ============================================
+# Path-Based Ingress Example
+# ============================================
+# This Ingress routes different URL paths to
+# different services on the same hostname.
+#
+# What this demonstrates:
+# 1. Multiple path rules
+# 2. Path-based routing
+# 3. Different services for different paths
+# 4. Path type selection
+#
+# Prerequisites:
+# - Ingress Controller installed
+# - Multiple services exist (api-service, web-service)
+#
+# To apply: kubectl apply -f path-based-ingress.yaml
+# To test:
+#   curl http://example.com/api/users
+#   curl http://example.com/web/dashboard
+# ============================================
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: path-based-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    # ============================================
+    # Rewrite Target Annotation
+    # ============================================
+    # Rewrites the URL path before forwarding.
+    # Useful for removing path prefixes.
+    # ============================================
+    # nginx.ingress.kubernetes.io/rewrite-target: /$2
+    # Use with path: /api(/|$)(.*) to rewrite /api/users to /users
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: example.com            # Single hostname for all paths
+    http:
+      paths:
+      # ============================================
+      # Path Rule 1: API Service
+      # ============================================
+      # Routes /api/* to API service.
+      # IMPORTANT: More specific paths should come first!
+      # ============================================
+      - path: /api               # Path prefix to match
+        pathType: Prefix         # Matches /api, /api/users, /api/v1, etc.
+        backend:
+          service:
+            name: api-service    # API service
+            port:
+              number: 80
+      
+      # ============================================
+      # Path Rule 2: Web Service
+      # ============================================
+      # Routes /web/* to web service.
+      # ============================================
+      - path: /web               # Path prefix to match
+        pathType: Prefix         # Matches /web, /web/dashboard, etc.
+        backend:
+          service:
+            name: web-service    # Web frontend service
+            port:
+              number: 80
+      
+      # ============================================
+      # Path Rule 3: Default/Root Path
+      # ============================================
+      # Routes root path and everything else to default service.
+      # Should be last (least specific).
+      # ============================================
+      - path: /                  # Root path (matches everything)
+        pathType: Prefix         # Matches all paths
+        backend:
+          service:
+            name: web-service    # Default to web service
+            port:
+              number: 80
+      
+      # ============================================
+      # Path Matching Order:
+      # ============================================
+      # Paths are evaluated in order.
+      # First matching path wins.
+      # 
+      # Example requests:
+      # - http://example.com/api/users
+      #   → Matches /api (first) → api-service
+      #
+      # - http://example.com/web/dashboard
+      #   → Matches /web (first) → web-service
+      #
+      # - http://example.com/
+      #   → Matches / (last) → web-service
+      #
+      # - http://example.com/other
+      #   → Matches / (last) → web-service
+      #
+      # Tip: Order paths from most specific to least specific!
+      # ============================================
+

@@ -1,0 +1,87 @@
+# ============================================
+# Dynamic PVC Example
+# ============================================
+# This PVC uses dynamic provisioning.
+# When applied, Kubernetes automatically creates
+# a PV that matches the requirements.
+#
+# What this demonstrates:
+# 1. Dynamic provisioning (no PV pre-created)
+# 2. Storage class usage
+# 3. Automatic PV creation
+#
+# Prerequisites:
+# - Storage class must exist
+#   kubectl apply -f storage-class.yaml
+# - Cluster must support the provisioner
+#
+# To apply: kubectl apply -f pvc-dynamic.yaml
+# To view: kubectl get pvc
+# To see auto-created PV: kubectl get pv
+# ============================================
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-dynamic            # PVC name
+  namespace: default
+spec:
+  # ============================================
+  # Access Modes
+  # ============================================
+  # Required access mode for this claim.
+  # Must be supported by the storage class provisioner.
+  # ============================================
+  accessModes:
+    - ReadWriteOnce             # RWO for most cloud storage
+  
+  # ============================================
+  # Storage Class
+  # ============================================
+  # References the storage class.
+  # When PVC is created, provisioner automatically
+  # creates a PV with matching characteristics.
+  #
+  # If storage class is default, can omit this field.
+  # ============================================
+  storageClassName: fast-ssd     # Must match existing StorageClass name
+  
+  # ============================================
+  # Resource Requests
+  # ============================================
+  # Amount of storage to provision.
+  # Provisioner creates PV with this capacity.
+  # ============================================
+  resources:
+    requests:
+      storage: 20Gi             # Request 20 Gibibytes
+                                 # PV will be created with this capacity
+  
+  # ============================================
+  # Volume Expansion (Optional)
+  # ============================================
+  # Allow this volume to be expanded later.
+  # Requires storage class to support expansion.
+  # ============================================
+  # volumeMode: Filesystem      # Filesystem or Block
+  
+  # ============================================
+  # How Dynamic Provisioning Works:
+  # ============================================
+  # 1. You create this PVC
+  # 2. Kubernetes sees storageClassName: fast-ssd
+  # 3. Finds StorageClass with name "fast-ssd"
+  # 4. Provisioner (e.g., aws-ebs) creates actual storage
+  # 5. Kubernetes creates PV automatically
+  # 6. PVC binds to the new PV
+  #
+  # Benefits:
+  # - No need to pre-create PVs
+  # - Automatic storage provisioning
+  # - Scales with demand
+  #
+  # To verify:
+  # kubectl get pvc pvc-dynamic
+  # kubectl get pv  # Should see auto-created PV
+  # ============================================
+

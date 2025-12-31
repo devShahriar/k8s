@@ -1,0 +1,106 @@
+# ============================================
+# Host-Based Ingress Example
+# ============================================
+# This Ingress routes different hostnames
+# to different services.
+#
+# What this demonstrates:
+# 1. Multiple host rules
+# 2. Host-based routing
+# 3. Different services for different domains
+#
+# Prerequisites:
+# - Ingress Controller installed
+# - DNS configured (or /etc/hosts entries)
+# - Services exist (api-service, web-service)
+#
+# To apply: kubectl apply -f host-based-ingress.yaml
+# To test:
+#   curl http://api.example.com
+#   curl http://web.example.com
+# ============================================
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: host-based-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  ingressClassName: nginx
+  rules:
+  # ============================================
+  # Rule 1: API Subdomain
+  # ============================================
+  # Routes api.example.com to API service.
+  # ============================================
+  - host: api.example.com        # API subdomain
+    http:
+      paths:
+      - path: /                  # All paths under this host
+        pathType: Prefix         # Prefix match
+        backend:
+          service:
+            name: api-service    # API service
+            port:
+              number: 80
+  
+  # ============================================
+  # Rule 2: Web Subdomain
+  # ============================================
+  # Routes web.example.com to web service.
+  # ============================================
+  - host: web.example.com        # Web subdomain
+    http:
+      paths:
+      - path: /                  # All paths under this host
+        pathType: Prefix
+        backend:
+          service:
+            name: web-service    # Web service
+            port:
+              number: 80
+  
+  # ============================================
+  # Rule 3: Root Domain
+  # ============================================
+  # Routes example.com to web service.
+  # ============================================
+  - host: example.com            # Root domain
+    http:
+      paths:
+      - path: /                  # All paths
+        pathType: Prefix
+        backend:
+          service:
+            name: web-service    # Web service (default)
+            port:
+              number: 80
+  
+  # ============================================
+  # How Host-Based Routing Works:
+  # ============================================
+  # 1. Request arrives with Host header
+  # 2. Ingress Controller matches hostname
+  # 3. Routes to corresponding service
+  #
+  # Example:
+  # curl -H "Host: api.example.com" http://<ingress-ip>/
+  #   → Matches host: api.example.com
+  #   → Routes to: api-service:80
+  #
+  # curl -H "Host: web.example.com" http://<ingress-ip>/
+  #   → Matches host: web.example.com
+  #   → Routes to: web-service:80
+  #
+  # DNS Configuration:
+  # - Point api.example.com to Ingress IP
+  # - Point web.example.com to Ingress IP
+  # - Point example.com to Ingress IP
+  #
+  # For testing, add to /etc/hosts:
+  # <ingress-ip> api.example.com
+  # <ingress-ip> web.example.com
+  # <ingress-ip> example.com
+  # ============================================
+

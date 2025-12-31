@@ -4,15 +4,16 @@ metadata:
   name: nginx-loadbalancer
   labels:
     app: nginx
+  annotations:
+    cloud.google.com/load-balancer-type: Internal # Example annotation for GCP internal LB
 spec:
   type: LoadBalancer
   ports:
-  - port: 80
-    targetPort: 80
-    protocol: TCP
-    name: http
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
   selector:
     app: nginx
   # Note: LoadBalancer type requires cloud provider support
   # In local clusters (minikube, kind), this may not work
-

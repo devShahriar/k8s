@@ -1,0 +1,148 @@
+# ============================================
+# TLS/HTTPS Ingress Example
+# ============================================
+# This Ingress enables HTTPS/TLS termination
+# for secure connections.
+#
+# What this demonstrates:
+# 1. TLS configuration
+# 2. SSL/TLS certificate management
+# 3. HTTPS routing
+# 4. SSL redirect
+#
+# Prerequisites:
+# - Ingress Controller installed
+# - TLS secret created with certificate and key
+#   kubectl create secret tls example-tls --cert=tls.crt --key=tls.key
+# - Service exists (nginx-service)
+#
+# To apply: kubectl apply -f tls-ingress.yaml
+# To test: curl https://example.com
+# ============================================
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tls-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    # ============================================
+    # SSL Redirect Annotation
+    # ============================================
+    # Automatically redirects HTTP to HTTPS.
+    # Uncomment to enable.
+    # ============================================
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"  # Redirect HTTP → HTTPS
+    
+    # ============================================
+    # Force SSL Annotation
+    # ============================================
+    # Forces SSL even if TLS is not configured.
+    # ============================================
+    # nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    
+    # ============================================
+    # SSL Protocol Annotation
+    # ============================================
+    # Specifies allowed SSL protocols.
+    # ============================================
+    # nginx.ingress.kubernetes.io/ssl-protocols: "TLSv1.2 TLSv1.3"
+    
+    # ============================================
+    # SSL Ciphers Annotation
+    # ============================================
+    # Specifies allowed SSL ciphers.
+    # ============================================
+    # nginx.ingress.kubernetes.io/ssl-ciphers: "HIGH:!aNULL:!MD5"
+spec:
+  ingressClassName: nginx
+  # ============================================
+  # TLS Configuration
+  # ============================================
+  # Defines TLS/SSL settings for HTTPS.
+  # Requires TLS secret with certificate and key.
+  # ============================================
+  tls:
+  # ============================================
+  # TLS Entry
+  # ============================================
+  # Each entry defines TLS for one or more hosts.
+  # ============================================
+  - hosts:
+    # ============================================
+    # TLS Hosts
+    # ============================================
+    # List of hostnames that use this TLS certificate.
+    # Must match hostnames in rules section.
+    # ============================================
+    - example.com               # Primary domain
+    - www.example.com           # WWW subdomain (if certificate covers it)
+    
+    # ============================================
+    # TLS Secret Name
+    # ============================================
+    # Secret containing TLS certificate and key.
+    # Secret must exist in same namespace.
+    # Secret must contain:
+    #   - tls.crt: Certificate file
+    #   - tls.key: Private key file
+    #
+    # To create secret:
+    #   kubectl create secret tls example-tls \
+    #     --cert=tls.crt \
+    #     --key=tls.key
+    # ============================================
+    secretName: example-tls     # TLS secret name
+  
+  # ============================================
+  # Ingress Rules
+  # ============================================
+  # Rules work the same as HTTP, but traffic
+  # will be encrypted with TLS.
+  # ============================================
+  rules:
+  - host: example.com          # Hostname (must be in TLS hosts list)
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-service
+            port:
+              number: 80
+  
+  - host: www.example.com      # WWW subdomain (if in TLS hosts)
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-service
+            port:
+              number: 80
+  
+  # ============================================
+  # How TLS Works:
+  # ============================================
+  # 1. Client connects to https://example.com
+  # 2. Ingress Controller terminates TLS (decrypts)
+  # 3. Forwards unencrypted traffic to service
+  # 4. Service forwards to pods
+  #
+  # Benefits:
+  # - TLS termination at cluster edge
+  # - No need to configure TLS in each pod
+  # - Centralized certificate management
+  #
+  # Certificate Management:
+  # - Manual: Create secret with cert/key
+  # - Automatic: Use cert-manager for Let's Encrypt
+  #
+  # To create self-signed cert for testing:
+  #   openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  #     -keyout tls.key -out tls.crt \
+  #     -subj "/CN=example.com"
+  # ============================================
+

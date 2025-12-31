@@ -1,0 +1,105 @@
+# ============================================
+# Storage Class Example
+# ============================================
+# Storage classes enable dynamic provisioning.
+# When a PVC requests storage from a storage class,
+# Kubernetes automatically creates a PV.
+#
+# What this demonstrates:
+# 1. Storage class definition
+# 2. Provisioner configuration
+# 3. Parameters for storage
+# 4. Default storage class
+#
+# Prerequisites:
+# - Cluster must support the provisioner
+# - For cloud: AWS EBS, GCE PD, Azure Disk, etc.
+# - For local: local-path-provisioner, hostpath-provisioner
+#
+# To apply: kubectl apply -f storage-class.yaml
+# To view: kubectl get storageclass
+# To set as default: Set annotation (see below)
+# ============================================
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: fast-ssd               # Storage class name (referenced in PVCs)
+  annotations:
+    # ============================================
+    # Default Storage Class
+    # ============================================
+    # Uncomment to make this the default storage class.
+    # PVCs without storageClassName will use this.
+    # Only one storage class should be default.
+    # ============================================
+    # storageclass.kubernetes.io/is-default-class: "true"
+  
+  labels:
+    type: ssd                 # Labels for organization
+    tier: fast                # Performance tier
+provisioner: kubernetes.io/aws-ebs  # Provisioner that creates volumes
+                                     # Options:
+                                     # - kubernetes.io/aws-ebs (AWS EBS)
+                                     # - kubernetes.io/gce-pd (Google Cloud)
+                                     # - kubernetes.io/azure-disk (Azure)
+                                     # - kubernetes.io/cinder (OpenStack)
+                                     # - rancher.io/local-path (Rancher local)
+                                     # - etc.
+parameters:
+  # ============================================
+  # Provisioner-Specific Parameters
+  # ============================================
+  # These parameters are specific to the provisioner.
+  # Example shown is for AWS EBS.
+  #
+  # For AWS EBS:
+  # ============================================
+  type: gp3                   # EBS volume type: gp3, gp2, io1, io2, st1, sc1
+  fsType: ext4                 # Filesystem type: ext4, xfs, etc.
+  iops: "3000"                 # IOPS (for io1, io2, gp3)
+  encrypted: "true"            # Enable encryption: "true" or "false"
+  
+  # For Google Cloud:
+  # type: pd-ssd              # pd-standard, pd-ssd
+  # replication-type: regional-zonal
+  
+  # For Azure:
+  # storageaccounttype: Premium_LRS  # Standard_LRS, Premium_LRS, etc.
+  # kind: managed
+  
+  # For local storage (example):
+  # provisioner: rancher.io/local-path
+  # nodePathMap: '[["worker-0","/opt/local-path-provisioner"]]
+
+# ============================================
+# Volume Binding Mode
+# ============================================
+# When to bind PVC to PV:
+# - Immediate: Bind immediately (default)
+# - WaitForFirstConsumer: Bind when pod uses it
+#
+# WaitForFirstConsumer is useful for:
+# - Topology-aware storage (zone-specific)
+# - Local storage (node-specific)
+# ============================================
+volumeBindingMode: Immediate   # Immediate or WaitForFirstConsumer
+
+# ============================================
+# Reclaim Policy
+# ============================================
+# Default reclaim policy for dynamically provisioned PVs.
+# Can be overridden per-PV.
+# ============================================
+reclaimPolicy: Delete          # Delete or Retain
+                               # Delete: Remove PV when PVC deleted
+                               # Retain: Keep PV after PVC deletion
+
+# ============================================
+# Allow Volume Expansion
+# ============================================
+# Whether volumes can be expanded after creation.
+# Requires PVC to have allowVolumeExpansion: true.
+# ============================================
+allowVolumeExpansion: true     # true or false
+

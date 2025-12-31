@@ -1,0 +1,129 @@
+# ============================================
+# Basic Ingress Example
+# ============================================
+# This creates a simple Ingress that routes
+# HTTP traffic to a service based on hostname.
+#
+# What this demonstrates:
+# 1. Basic Ingress configuration
+# 2. Host-based routing
+# 3. Service backend configuration
+# 4. Path type usage
+#
+# Prerequisites:
+# - Ingress Controller must be installed
+#   For minikube: minikube addons enable ingress
+#   For other: Install NGINX Ingress Controller
+# - Service must exist (nginx-service)
+#
+# To apply: kubectl apply -f basic-ingress.yaml
+# To view: kubectl get ingress
+# To test: curl -H "Host: example.com" http://<ingress-ip>
+# ============================================
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: basic-ingress # Ingress name (must be unique in namespace)
+  namespace: default # Namespace (default if not specified)
+  annotations:
+    # ============================================
+    # Ingress Class Annotation
+    # ============================================
+    # Specifies which Ingress Controller to use.
+    # Required if multiple controllers exist.
+    # ============================================
+    kubernetes.io/ingress.class:
+      "nginx" # Use NGINX Ingress Controller
+      # Other options: traefik, haproxy, etc.
+
+    # ============================================
+    # Common NGINX Annotations
+    # ============================================
+    # Uncomment to use:
+    # ============================================
+    # nginx.ingress.kubernetes.io/ssl-redirect: "true"  # Redirect HTTP to HTTPS
+    # nginx.ingress.kubernetes.io/rewrite-target: /    # Rewrite URL path
+    # nginx.ingress.kubernetes.io/limit-rps: "100"     # Rate limiting
+spec:
+  # ============================================
+  # Ingress Class Name
+  # ============================================
+  # Modern way to specify Ingress Controller
+  # (alternative to annotation)
+  # ============================================
+  ingressClassName:
+    nginx # Ingress class name
+    # Must match IngressClass resource
+
+  # ============================================
+  # TLS Configuration (Optional)
+  # ============================================
+  # Uncomment to enable HTTPS/TLS.
+  # Requires TLS secret with certificate and key.
+  # ============================================
+  # tls:
+  # - hosts:
+  #   - example.com              # Hostname for TLS
+  #   secretName: example-tls     # Secret containing tls.crt and tls.key
+
+  # ============================================
+  # Ingress Rules
+  # ============================================
+  # Defines routing rules for incoming traffic.
+  # Each rule can match hostname and paths.
+  # ============================================
+  rules:
+    # ============================================
+    # Rule 1: Host-Based Routing
+    # ============================================
+    # Routes traffic for specific hostname.
+    # If host is omitted, matches all hostnames.
+    # ============================================
+    - host:
+        example.com # Hostname to match (DNS must point to Ingress IP)
+        # Leave empty to match all hosts
+      http: # HTTP rules (HTTPS uses same rules with TLS)
+        paths:
+          # ============================================
+          # Path Rule
+          # ============================================
+          # Defines which paths route to which service.
+          # Paths are evaluated in order (first match wins).
+          # ============================================
+          - path: / # Path to match
+            pathType:
+              Prefix # Path matching type:
+              # - Exact: Exact match only
+              # - Prefix: Matches path prefix (most common)
+              # - ImplementationSpecific: Controller-specific
+
+            # ============================================
+            # Backend Configuration
+            # ============================================
+            # Defines which service to route traffic to.
+            # ============================================
+            backend:
+              service:
+                name: nginx-service # Service name (must exist in same namespace)
+                port:
+                  number:
+                    80 # Service port (must match service port)
+                    # Alternative: name: "http" (if service port has name)
+
+  # ============================================
+  # How It Works:
+  # ============================================
+  # 1. External request arrives at Ingress Controller
+  # 2. Controller checks hostname (example.com)
+  # 3. Matches path (/)
+  # 4. Routes to nginx-service:80
+  # 5. Service forwards to pods
+  #
+  # Example Request Flow:
+  # curl http://example.com/
+  #   → Ingress Controller
+  #   → Matches rule: host=example.com, path=/
+  #   → Routes to: nginx-service:80
+  #   → Service → Pods
+  # ============================================

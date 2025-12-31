@@ -1,0 +1,82 @@
+# ============================================
+# Pod Using Persistent Volume Claim
+# ============================================
+# This pod demonstrates how to mount a PVC
+# as a volume in a pod.
+#
+# What this demonstrates:
+# 1. How to reference a PVC in pod spec
+# 2. Volume mounting configuration
+# 3. Data persistence across pod restarts
+#
+# Prerequisites:
+# - PVC must exist and be in Bound status
+#   kubectl get pvc should show STATUS: Bound
+#
+# To apply: kubectl apply -f pod-with-pvc.yaml
+# To verify: kubectl exec storage-pod -- df -h
+# To test persistence: Write data, delete pod, recreate, verify data
+# ============================================
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: storage-pod             # Pod name
+  labels:
+    app: storage-test          # Labels for organization
+spec:
+  containers:
+  - name: nginx                # Container name
+    image: nginx:1.21          # Container image
+    ports:
+    - containerPort: 80        # Port the container listens on
+    
+    # ============================================
+    # Volume Mounts
+    # ============================================
+    # Mounts volumes into the container filesystem.
+    # This makes the PVC available inside the container.
+    # ============================================
+    volumeMounts:
+    - name: storage-volume     # Name of volume to mount (must match volumes.name)
+      mountPath: /data         # Path inside container where volume is mounted
+      readOnly: false          # false = read-write, true = read-only
+                                 # For ReadOnlyMany PVC, set to true
+  
+  # ============================================
+  # Volumes
+  # ============================================
+  # Defines volumes available to containers.
+  # This references the PVC we created.
+  # ============================================
+  volumes:
+  - name: storage-volume       # Volume name (referenced in volumeMounts)
+    persistentVolumeClaim:     # Volume type: Persistent Volume Claim
+      claimName: pvc-example    # Name of the PVC to use
+                                 # Must exist in same namespace
+      readOnly: false          # Optional: Mount as read-only
+                                 # Default: false (read-write)
+  
+  # ============================================
+  # How to Test Data Persistence:
+  # ============================================
+  # 1. Apply this pod:
+  #    kubectl apply -f pod-with-pvc.yaml
+  #
+  # 2. Write data to the volume:
+  #    kubectl exec storage-pod -- sh -c "echo 'Hello World' > /data/test.txt"
+  #
+  # 3. Verify data:
+  #    kubectl exec storage-pod -- cat /data/test.txt
+  #
+  # 4. Delete the pod:
+  #    kubectl delete pod storage-pod
+  #
+  # 5. Recreate the pod:
+  #    kubectl apply -f pod-with-pvc.yaml
+  #
+  # 6. Verify data persisted:
+  #    kubectl exec storage-pod -- cat /data/test.txt
+  #    # Should still show: Hello World
+  # ============================================
+

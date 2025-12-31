@@ -1,0 +1,116 @@
+# ============================================
+# Basic Persistent Volume Claim Example
+# ============================================
+# This creates a Persistent Volume Claim (PVC) that
+# requests storage from available Persistent Volumes.
+#
+# What this demonstrates:
+# 1. How to request storage
+# 2. Access mode requirements
+# 3. Storage class matching
+# 4. Binding to PV
+#
+# Prerequisites:
+# - A PV must exist that matches these requirements
+#   (or use dynamic provisioning with storage class)
+#
+# To apply: kubectl apply -f basic-pvc.yaml
+# To view: kubectl get pvc
+# To check binding: kubectl describe pvc pvc-example
+# ============================================
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-example             # PVC name (must be unique in namespace)
+  namespace: default            # Namespace (default if not specified)
+  labels:                       # Labels help organize resources
+    app: myapp                  # Application label
+    environment: development    # Environment tag
+spec:
+  # ============================================
+  # Access Modes
+  # ============================================
+  # Required access modes for this claim.
+  # Must match or be subset of PV access modes.
+  #
+  # Options:
+  # - ReadWriteOnce (RWO): Single node, read-write
+  # - ReadOnlyMany (ROX): Many nodes, read-only
+  # - ReadWriteMany (RWX): Many nodes, read-write
+  # - ReadWriteOncePod (RWOP): Single pod, read-write
+  #
+  # Choose based on your needs:
+  # - Database: ReadWriteOnce
+  # - Shared config: ReadOnlyMany
+  # - Shared files: ReadWriteMany
+  # ============================================
+  accessModes:
+    - ReadWriteOnce             # Request RWO access
+  
+  # ============================================
+  # Storage Class
+  # ============================================
+  # Requests storage from specific storage class.
+  # 
+  # Options:
+  # - "manual": Binds to PV with storageClassName: manual
+  # - "fast-ssd": Binds to PV with storageClassName: fast-ssd
+  # - "": Uses default storage class (if exists)
+  # - null: No storage class (binds to PV with no storage class)
+  #
+  # For dynamic provisioning, specify a storage class.
+  # For static provisioning, match PV's storageClassName.
+  # ============================================
+  storageClassName: manual      # Match PV's storage class
+  
+  # ============================================
+  # Resource Requests
+  # ============================================
+  # Amount of storage requested.
+  # Must be ≤ PV capacity.
+  # Can request less than PV capacity.
+  # ============================================
+  resources:
+    requests:
+      storage: 5Gi              # Request 5 Gibibytes
+                                 # Can be less than PV capacity (10Gi)
+                                 # Units: Gi, Mi, Ti
+  
+  # ============================================
+  # Selector (Optional)
+  # ============================================
+  # Selects specific PVs by labels.
+  # Useful when multiple PVs match requirements.
+  # ============================================
+  # selector:
+  #   matchLabels:
+  #     type: ssd               # Only bind to PVs with type=ssd label
+  #   matchExpressions:
+  #   - key: environment
+  #     operator: In
+  #     values:
+  #     - production
+  
+  # ============================================
+  # Volume Mode (Optional)
+  # ============================================
+  # Filesystem or Block device.
+  # Must match PV volumeMode.
+  # Default: Filesystem
+  # ============================================
+  # volumeMode: Filesystem      # Filesystem (default) or Block
+  
+  # ============================================
+  # Data Source (Optional)
+  # ============================================
+  # Clone from existing PVC or restore from snapshot.
+  # ============================================
+  # dataSource:
+  #   name: source-pvc
+  #   kind: PersistentVolumeClaim
+  # dataSourceRef:
+  #   name: snapshot-name
+  #   kind: VolumeSnapshot
+  #   apiGroup: snapshot.storage.k8s.io
+
