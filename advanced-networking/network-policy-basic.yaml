@@ -1,0 +1,98 @@
+# ============================================
+# Basic Network Policy Example
+# ============================================
+# Network Policies control traffic flow between pods.
+# This example shows a basic deny-all policy.
+#
+# What this demonstrates:
+# 1. Network policy structure
+# 2. Pod selector
+# 3. Ingress and egress rules
+# 4. Default deny behavior
+#
+# Prerequisites:
+# - Cluster must support Network Policies (CNI plugin)
+# - Calico, Cilium, or other network policy-enabled CNI
+#
+# To apply: kubectl apply -f network-policy-basic.yaml
+# To view: kubectl get networkpolicies
+# ============================================
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all                # Network policy name
+  namespace: default           # Namespace (applies to pods in this namespace)
+spec:
+  # ============================================
+  # Pod Selector
+  # ============================================
+  # Selects which pods this policy applies to.
+  # Empty selector = all pods in namespace.
+  # ============================================
+  podSelector: {}              # Empty = applies to all pods
+                               # Use labels to select specific pods:
+                               # podSelector:
+                               #   matchLabels:
+                               #     app: nginx
+  
+  # ============================================
+  # Policy Types
+  # ============================================
+  # Defines which types of rules are defined.
+  # - Ingress: Incoming traffic rules
+  # - Egress: Outgoing traffic rules
+  # ============================================
+  policyTypes:
+  - Ingress                    # Ingress rules defined
+  - Egress                     # Egress rules defined
+  
+  # ============================================
+  # Ingress Rules
+  # ============================================
+  # Defines allowed incoming traffic.
+  # Empty list = deny all ingress.
+  # ============================================
+  ingress:
+  # Empty = deny all incoming traffic
+  # To allow traffic, add rules:
+  # - from:
+  #   - podSelector:
+  #       matchLabels:
+  #         app: frontend
+  #   ports:
+  #   - protocol: TCP
+  #     port: 80
+  
+  # ============================================
+  # Egress Rules
+  # ============================================
+  # Defines allowed outgoing traffic.
+  # Empty list = deny all egress.
+  # ============================================
+  egress:
+  # Empty = deny all outgoing traffic
+  # To allow traffic, add rules:
+  # - to:
+  #   - podSelector:
+  #       matchLabels:
+  #         app: database
+  #   ports:
+  #   - protocol: TCP
+  #     port: 5432
+  
+  # ============================================
+  # How Network Policies Work:
+  # ============================================
+  # 1. No policy = all traffic allowed (default)
+  # 2. Policy exists = only explicitly allowed traffic
+  # 3. Multiple policies = union of all rules (OR logic)
+  #
+  # This policy:
+  # - Applies to all pods (empty podSelector)
+  # - Denies all ingress (empty ingress list)
+  # - Denies all egress (empty egress list)
+  #
+  # Result: Complete network isolation
+  # ============================================
+

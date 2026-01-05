@@ -1,0 +1,66 @@
+# ============================================
+# ClusterRoleBinding Example
+# ============================================
+# ClusterRoleBindings grant ClusterRoles to subjects.
+# They have cluster-wide effect.
+#
+# What this demonstrates:
+# 1. Cluster-wide role binding
+# 2. Binding cluster role to user
+# 3. Cluster-wide permissions
+#
+# Prerequisites:
+# - ClusterRole must exist (clusterrole-admin.yaml)
+#
+# To apply: kubectl apply -f clusterrolebinding-admin.yaml
+# To view: kubectl get clusterrolebindings
+# ============================================
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cluster-admin-binding   # ClusterRoleBinding name (cluster-wide)
+  labels:
+    purpose: administration
+subjects:
+  # ============================================
+  # Subjects
+  # ============================================
+  # Who gets cluster-wide admin permissions.
+  # ============================================
+  - kind: User                  # Subject type: User, Group, or ServiceAccount
+    name: admin@example.com     # User name
+    apiGroup: rbac.authorization.k8s.io
+  
+  # ============================================
+  # Service Account Example
+  # ============================================
+  # Can also bind to service accounts.
+  # ============================================
+  # - kind: ServiceAccount
+  #   name: cluster-admin-sa
+  #   namespace: kube-system
+  #   apiGroup: ""
+
+roleRef:
+  kind: ClusterRole             # Must be ClusterRole (not Role)
+  name: cluster-admin           # ClusterRole name (must exist)
+  apiGroup: rbac.authorization.k8s.io
+  
+  # ============================================
+  # How ClusterRoleBindings Work:
+  # ============================================
+  # 1. ClusterRoleBinding connects ClusterRole to Subjects
+  # 2. Subjects get cluster-wide permissions
+  # 3. Applies to all namespaces
+  # 4. Can access cluster-scoped resources
+  #
+  # This binding:
+  # - Grants cluster-admin role to admin@example.com
+  # - User has full access to entire cluster
+  # - Can access all namespaces and cluster resources
+  #
+  # ⚠️ WARNING: Cluster-wide admin access!
+  # Only grant to trusted administrators.
+  # ============================================
+

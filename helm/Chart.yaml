@@ -1,0 +1,179 @@
+# ============================================
+# Helm Chart.yaml Example - TEACHING GUIDE
+# ============================================
+# Chart.yaml is the METADATA file for your Helm chart.
+# Think of it like package.json (Node.js) or pom.xml (Maven).
+# It defines WHO you are, WHAT version, and WHAT you depend on.
+#
+# Key Concepts:
+# - Helm reads this file FIRST for every command
+# - Defines chart identity and version
+# - Lists dependencies (other charts this chart needs)
+# - Used for chart discovery and versioning
+#
+# Location: Chart.yaml (must be in root of chart directory)
+# Commands that use it: helm install, helm upgrade, helm lint, helm package
+# ============================================
+
+apiVersion: v2                  # Chart API version - MUST be v2 for Helm 3
+                                # Helm 2 used v1, but Helm 3 uses v2
+                                # Always use v2 for new charts
+                                # This tells Helm which chart format to expect
+name: my-nginx-chart           # Chart name - must be lowercase, no spaces
+                                # Use hyphens for separation: my-nginx-chart
+                                # This becomes the chart identifier
+                                # Used in: helm install my-release ./my-nginx-chart
+                                # Must be unique if publishing to repository
+description: A Helm chart for deploying nginx  # Human-readable description
+                                               # Shown in: helm search, helm show
+                                               # Helps others understand what the chart does
+type: application              # Chart type: "application" or "library"
+                                # application = Deployable application (most charts)
+                                #    This creates actual Kubernetes resources
+                                # library = Reusable chart components (rare)
+                                #    Used by other charts, doesn't deploy anything
+
+# ============================================
+# VERSION INFORMATION
+# ============================================
+# Two different versions - often confused!
+# Follow semantic versioning: https://semver.org
+# Format: MAJOR.MINOR.PATCH (e.g., 1.0.0)
+# ============================================
+version: 1.0.0                  # CHART version - version of the chart itself
+                                # Increment when you change the chart (templates, values)
+                                # Examples:
+                                # - 1.0.0 → 1.0.1 (patch: bug fix in chart)
+                                # - 1.0.0 → 1.1.0 (minor: new feature in chart)
+                                # - 1.0.0 → 2.0.0 (major: breaking change)
+                                # Used for chart versioning and upgrades
+appVersion: "1.21"              # APPLICATION version - version of the software being deployed
+                                # This is the version of nginx (the application)
+                                # Can be different from chart version
+                                # Example: Chart v1.0.0 can deploy nginx 1.21 or 1.22
+                                # Use quotes for versions like "1.2.3-beta"
+                                # Defaults to Chart.yaml appVersion if not overridden in values.yaml
+
+# ============================================
+# CHART METADATA (Optional but Recommended)
+# ============================================
+# Additional information that helps with chart discovery and maintenance.
+# All fields are optional but make charts more professional and discoverable.
+# ============================================
+home: https://nginx.org/        # Homepage URL of the application
+                                # Shown in: helm show chart, helm search
+                                # Helps users find more information
+sources:                        # Source code URLs (GitHub, GitLab, etc.)
+  - https://github.com/nginx/nginx  # Where the application source code lives
+                                    # Can have multiple URLs
+                                    # Useful for: contributing, reporting issues
+maintainers:                    # Who maintains this chart
+  - name: Your Name             # Maintainer name
+    email: your.email@example.com  # Contact email
+                                # Can have multiple maintainers
+                                # Important for: support, updates, security issues
+keywords:                       # Keywords for chart discovery
+  - nginx                       # Used by: helm search
+  - web                         # Helps users find your chart
+  - server                      # Example: helm search repo nginx
+                                # Matches charts with "nginx" keyword
+icon: https://nginx.org/nginx.png  # Chart icon URL (optional)
+                                  # Shown in: Helm UI, chart repositories
+                                  # Must be a valid URL to an image
+                                  # Recommended: PNG or SVG format
+
+# ============================================
+# DEPENDENCIES
+# ============================================
+# Other Helm charts that this chart needs.
+# Like npm dependencies or Maven dependencies.
+# Helm installs dependencies BEFORE installing your chart.
+#
+# Common use cases:
+# - Web app needs database (postgresql chart)
+# - App needs Redis (redis chart)
+# - App needs message queue (rabbitmq chart)
+#
+# Commands:
+# - helm dependency update (downloads dependencies)
+# - helm dependency build (rebuilds from Chart.lock)
+# ============================================
+dependencies:
+  # ============================================
+  # DEPENDENCY EXAMPLE (Commented out - uncomment to use)
+  # ============================================
+  # - name: postgresql            # Name of the dependency chart
+  #   version: "12.1.2"           # Required version (must match exactly)
+  #   repository: "https://charts.bitnami.com/bitnami"  # Chart repository URL
+  #                              # Can be: HTTP URL, local path, or alias
+  #   condition: postgresql.enabled  # OPTIONAL: Only install if this value is true
+  #                                 # Allows optional dependencies
+  #                                 # Example: values.yaml has postgresql.enabled: false
+  #   tags:                        # OPTIONAL: Tags for grouping dependencies
+  #     - database                 # Can enable/disable multiple deps with same tag
+  #                              # Example: --set tags.database=true
+
+# ============================================
+# Annotations
+# ============================================
+# Additional metadata (optional)
+# ============================================
+annotations:
+  category: Web Server
+  licenses: Apache-2.0
+
+# ============================================
+# Deprecated
+# ============================================
+# Mark chart as deprecated
+# ============================================
+# deprecated: true
+
+# ============================================
+# HOW CHART.YAML WORKS - TEACHING POINTS:
+# ============================================
+# 1. Helm reads this file FIRST for every command
+#    - helm install: reads Chart.yaml to understand chart
+#    - helm upgrade: checks version compatibility
+#    - helm lint: validates Chart.yaml structure
+#    - helm package: includes Chart.yaml in .tgz file
+#
+# 2. Version is used for chart versioning
+#    - Helm tracks chart versions for upgrades/rollbacks
+#    - Each upgrade creates new release with version
+#    - Check with: helm history my-release
+#
+# 3. Dependencies are resolved and installed
+#    - Helm downloads dependencies to charts/ directory
+#    - Dependencies installed BEFORE main chart
+#    - Run: helm dependency update (downloads deps)
+#
+# 4. Metadata helps with chart discovery
+#    - keywords: helm search repo nginx
+#    - description: shown in search results
+#    - maintainers: who to contact for issues
+#
+# REQUIRED FIELDS (must have these):
+# - apiVersion: v2 (for Helm 3)
+# - name: chart name (lowercase, no spaces)
+# - version: chart version (semantic versioning)
+#
+# OPTIONAL BUT RECOMMENDED:
+# - description: what the chart does
+# - appVersion: application version
+# - maintainers: who maintains it
+# - keywords: for discovery
+#
+# COMMON COMMANDS:
+# - helm lint ./my-chart (validates Chart.yaml and templates)
+# - helm package ./my-chart (creates .tgz file with Chart.yaml)
+# - helm dependency update (downloads dependencies to charts/)
+# - helm show chart my-chart (displays Chart.yaml content)
+#
+# COMMON MISTAKES:
+# - Wrong apiVersion (using v1 instead of v2)
+# - Invalid version format (not semantic versioning)
+# - Chart name with spaces or uppercase
+# - Dependencies not updated (run helm dependency update)
+# ============================================
+

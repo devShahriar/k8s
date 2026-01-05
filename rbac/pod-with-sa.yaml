@@ -1,0 +1,66 @@
+# ============================================
+# Pod Using Service Account
+# ============================================
+# This pod uses a custom service account
+# that has RBAC permissions.
+#
+# What this demonstrates:
+# 1. Using service account in pod
+# 2. Service account token mounting
+# 3. API access from pod
+#
+# Prerequisites:
+# - Service account must exist (service-account.yaml)
+# - RoleBinding must grant permissions
+#
+# To apply: kubectl apply -f pod-with-sa.yaml
+# To test: kubectl exec pod-with-sa -- sh -c "cat /var/run/secrets/kubernetes.io/serviceaccount/token"
+# ============================================
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-with-sa
+  labels:
+    app: test
+spec:
+  # ============================================
+  # Service Account
+  # ============================================
+  # Specifies which service account to use.
+  # Pod gets permissions from this service account.
+  # ============================================
+  serviceAccountName: my-service-account  # Service account name (must exist)
+                                         # Default: default service account
+  
+  containers:
+  - name: test
+    image: busybox:latest
+    command: ["sleep", "3600"]
+  
+  # ============================================
+  # Automount Service Account Token
+  # ============================================
+  # Overrides service account's automount setting.
+  # ============================================
+  # automountServiceAccountToken: true  # true or false
+                                       # Token mounted at:
+                                       # /var/run/secrets/kubernetes.io/serviceaccount/token
+  
+  # ============================================
+  # How Service Accounts Work in Pods:
+  # ============================================
+  # 1. Pod uses specified service account
+  # 2. Service account token mounted in pod
+  # 3. Pod can authenticate to Kubernetes API
+  # 4. Permissions come from RoleBindings
+  #
+  # Token Location:
+  # - /var/run/secrets/kubernetes.io/serviceaccount/token
+  # - /var/run/secrets/kubernetes.io/serviceaccount/namespace
+  # - /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+  #
+  # To test API access:
+  # kubectl exec pod-with-sa -- sh -c "TOKEN=\$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) && curl -k -H \"Authorization: Bearer \$TOKEN\" https://kubernetes/api/v1/namespaces/default/pods"
+  # ============================================
+

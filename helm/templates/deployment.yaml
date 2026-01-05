@@ -1,0 +1,194 @@
+# ============================================
+# Helm Template - Deployment - TEACHING GUIDE
+# ============================================
+# This is a Helm TEMPLATE file - it's not plain YAML, it has templating.
+# Helm processes this file and generates actual Kubernetes YAML.
+# Think of it like a "form letter" where you fill in the blanks.
+#
+# Key Concepts:
+# - Templates use Go templating syntax
+# - {{ }} are template delimiters
+# - Values are injected: {{ .Values.replicaCount }}
+# - Conditionals: {{- if .Values.enabled }}
+# - Functions: {{ .Values.name | default "default" }}
+#
+# Location: templates/deployment.yaml (in templates/ directory)
+# Generated during: helm install, helm upgrade, helm template
+# View generated YAML: helm install my-release ./chart --dry-run --debug
+# ============================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "my-chart.fullname" . }}  # Helper function generates name
+                                             # include = calls function from _helpers.tpl
+                                             # "my-chart.fullname" = function name
+                                             # . = root context (passes all data)
+                                             # Result: my-chart-12345 (release name + chart name)
+  labels:
+    {{- include "my-chart.labels" . | nindent 4 }}  # Include helper function for labels
+                                                     # {{- = trim whitespace before
+                                                     # | = pipe operator (like Unix)
+                                                     # nindent 4 = indent with 4 spaces + newline
+    # ============================================
+    # TEMPLATE SYNTAX EXPLAINED:
+    # ============================================
+    # {{ }} = Template delimiters (start and end of template code)
+    # {{- }} = Trim whitespace before ({{- removes leading whitespace)
+    # -}} = Trim whitespace after (removes trailing whitespace)
+    # . = Root context (contains .Values, .Release, .Chart, .Template)
+    # | = Pipe operator (passes output to next function, like Unix pipes)
+    # ============================================
+spec:
+  replicas: {{ .Values.replicaCount | default 1 }}  # Access value from values.yaml
+                                                     # .Values = all values from values.yaml
+                                                     # .Values.replicaCount = the replicaCount value
+                                                     # | default 1 = if replicaCount is empty, use 1
+                                                     # This prevents errors if value is missing
+  selector:
+    matchLabels:
+      app: {{ include "my-chart.name" . }}
+  template:
+    metadata:
+      labels:
+        {{- include "my-chart.labels" . | nindent 8 }}
+        {{- with .Values.podAnnotations }}  # Conditional: only if podAnnotations exists
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.serviceAccount.create }}  # Conditional rendering
+      serviceAccountName: {{ include "my-chart.serviceAccountName" . }}
+      {{- end }}
+      containers:
+      - name: {{ .Chart.Name }}  # Chart name from Chart.yaml
+                                 # .Chart = chart metadata (from Chart.yaml)
+                                 # .Chart.Name = name field from Chart.yaml
+                                 # Result: "my-nginx-chart"
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"  # Full image name
+                                 # Combines repository and tag
+                                 # .Values.image.repository = "nginx"
+                                 # .Values.image.tag = "1.21" (or defaults to Chart.yaml appVersion)
+                                 # Result: "nginx:1.21"
+                                 # Quotes around entire string for safety
+        imagePullPolicy: {{ .Values.image.pullPolicy }}  # Image pull policy from values
+                                                          # Result: "IfNotPresent"
+        ports:
+        - name: http
+          containerPort: {{ .Values.service.targetPort | default 80 }}  # Container port
+                                                                         # Uses service.targetPort or defaults to 80
+                                                                         # | default = fallback if value missing
+          protocol: TCP
+        {{- if .Values.env }}  # CONDITIONAL: Only render if .Values.env exists and is not empty
+                               # {{- if }} = conditional block
+                               # If env is empty/null, this entire block is skipped
+                               # Common pattern: optional features
+        env:
+        {{- range .Values.env }}  # LOOP: Iterate through list
+                                 # range = loop through array/list
+                                 # .Values.env = list of environment variables
+                                 # Inside loop, . refers to current item (not root context)
+        - name: {{ .name }}     # Current item's name field
+          value: {{ .value | quote }}  # Current item's value field
+                                       # | quote = adds quotes around string
+                                       # Prevents YAML syntax errors with special characters
+        {{- end }}              # End of range loop
+        {{- end }}              # End of if statement
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}  # Convert object to YAML
+                                                         # toYaml = converts Go object to YAML format
+                                                         # .Values.resources = nested object (limits, requests)
+                                                         # | nindent 10 = indent with 10 spaces + newline
+                                                         # Result: Properly indented YAML for resources section
+        {{- if .Values.configMap.enabled }}  # CONDITIONAL: Only if ConfigMap is enabled
+                                             # Common pattern: feature flags
+                                             # enabled: false = feature disabled, skip this block
+        volumeMounts:
+        - name: config
+          mountPath: /etc/nginx/conf.d
+        {{- end }}              # End of conditional block
+      {{- if .Values.nodeSelector }}  # Conditional node selector
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .Values.tolerations }}  # Conditional tolerations
+      tolerations:
+        {{- toYaml .Values.tolerations | nindent 8 }}
+      {{- end }}
+      {{- if .Values.affinity }}  # Conditional affinity
+      affinity:
+        {{- toYaml .Values.affinity | nindent 8 }}
+      {{- end }}
+      {{- if .Values.configMap.enabled }}  # Conditional volume
+      volumes:
+      - name: config
+        configMap:
+          name: {{ include "my-chart.fullname" . }}-config
+      {{- end }}
+
+# ============================================
+# HELM TEMPLATE FUNCTIONS - REFERENCE GUIDE:
+# ============================================
+# Common functions you'll use in templates:
+#
+# STRING FUNCTIONS:
+# - quote: Add quotes around string ({{ .Values.name | quote }})
+# - upper: Convert to uppercase ({{ .Values.name | upper }})
+# - lower: Convert to lowercase ({{ .Values.name | lower }})
+# - replace: Replace text ({{ .Values.name | replace "old" "new" }})
+#
+# VALUE FUNCTIONS:
+# - default: Default if empty ({{ .Values.count | default 1 }})
+# - required: Fail if missing ({{ required "name is required" .Values.name }})
+# - empty: Check if empty ({{- if empty .Values.env }})
+#
+# YAML FUNCTIONS:
+# - toYaml: Convert to YAML ({{ .Values.resources | toYaml }})
+# - toJson: Convert to JSON ({{ .Values.data | toJson }})
+# - fromYaml: Parse YAML ({{ .Values.yamlString | fromYaml }})
+#
+# CONTROL FLOW:
+# - if/else/end: Conditional ({{- if .Values.enabled }}...{{- end }})
+# - with: Conditional block with new context ({{- with .Values.image }}...{{- end }})
+# - range: Loop through list ({{- range .Values.items }}...{{- end }})
+#
+# FORMATTING:
+# - nindent: Indent with newline ({{ .Values.data | nindent 4 }})
+# - indent: Indent without newline ({{ .Values.data | indent 2 }})
+# - trim: Remove whitespace ({{ .Values.name | trim }})
+#
+# TEMPLATE FUNCTIONS:
+# - include: Include helper template ({{ include "my-chart.labels" . }})
+# - template: Include template (deprecated, use include)
+#
+# CONTEXT VARIABLES (what . contains):
+# - .Values: All values from values.yaml
+#   Example: .Values.replicaCount, .Values.image.repository
+# - .Release: Release information
+#   Example: .Release.Name (release name), .Release.Namespace
+# - .Chart: Chart metadata from Chart.yaml
+#   Example: .Chart.Name, .Chart.Version, .Chart.AppVersion
+# - .Template: Template information
+#   Example: .Template.Name (template file name)
+# - .Files: Access to non-template files
+#   Example: .Files.Get "config.txt"
+#
+# TEACHING POINTS:
+# 1. {{ }} = template code, everything else = literal YAML
+# 2. . = root context, contains all available data
+# 3. | = pipe operator, passes output to function
+# 4. {{- }} = trim whitespace (important for clean YAML)
+# 5. Functions can be chained: {{ .Values.name | upper | quote }}
+#
+# COMMON PATTERNS:
+# - Conditional rendering: {{- if .Values.enabled }}...{{- end }}
+# - Looping: {{- range .Values.items }}...{{- end }}
+# - Defaults: {{ .Values.count | default 1 }}
+# - Nested values: {{ .Values.image.repository }}
+# - Helper functions: {{ include "my-chart.fullname" . }}
+#
+# TESTING TEMPLATES:
+# - helm install my-release ./chart --dry-run --debug (see generated YAML)
+# - helm template my-release ./chart (generate YAML without installing)
+# - helm lint ./chart (validate templates)
+# ============================================
+

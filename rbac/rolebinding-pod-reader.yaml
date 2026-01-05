@@ -1,0 +1,143 @@
+# ============================================
+# RoleBinding Example - TEACHING GUIDE
+# ============================================
+# RoleBindings are the CONNECTOR between WHO (subjects) and WHAT (roles).
+# Think of it like assigning a job title to an employee.
+# Without RoleBinding, Roles exist but grant no permissions to anyone.
+#
+# The Complete RBAC Flow:
+# 1. ServiceAccount (WHO) - identity for pods
+# 2. Role (WHAT) - defines permissions
+# 3. RoleBinding (GRANT) - connects WHO to WHAT
+# 4. Pod uses ServiceAccount - gets the permissions
+#
+# Key Concepts:
+# - RoleBinding is namespace-scoped (even if references ClusterRole)
+# - Must be in same namespace as Role
+# - Can grant to multiple subjects
+# - roleRef is IMMUTABLE (cannot change after creation)
+#
+# Prerequisites (MUST CREATE FIRST):
+# - Role must exist: kubectl apply -f role-pod-reader.yaml
+# - Service account must exist: kubectl apply -f service-account.yaml
+#
+# To apply: kubectl apply -f rolebinding-pod-reader.yaml
+# To view: kubectl get rolebindings (or kubectl get rb)
+# To check: kubectl describe rolebinding read-pods
+# ============================================
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: read-pods               # RoleBinding name - can be anything descriptive
+                                # Multiple RoleBindings can reference same Role
+                                # Example: read-pods-dev, read-pods-prod
+  namespace: default           # CRITICAL: Must match Role's namespace
+                                # RoleBinding and Role must be in SAME namespace
+                                # If Role is in "default", RoleBinding must be in "default"
+  labels:
+    purpose: read-only         # Labels for organization (optional)
+subjects:
+  # ============================================
+  # SUBJECTS - WHO GETS THE PERMISSIONS
+  # ============================================
+  # Subjects are the entities that receive the permissions.
+  # Three types: ServiceAccount, User, Group
+  #
+  # ServiceAccount: For pods (most common)
+  # User: For human users (like developer@example.com)
+  # Group: For groups of users (like "developers" group)
+  # ============================================
+  - kind: ServiceAccount        # Subject type - who/what gets permissions
+                                 # ServiceAccount = for pods (this example)
+                                 # User = for human users
+                                 # Group = for groups of users
+    name: my-service-account    # Name of the service account
+                                 # MUST EXIST in the namespace
+                                 # If doesn't exist: RoleBinding created but no permissions granted
+                                 # Check with: kubectl get sa my-service-account
+    namespace: default          # Namespace where service account exists
+                                 # ServiceAccounts are namespace-scoped, so must specify
+                                 # For Users and Groups: OMIT namespace (they're cluster-scoped)
+  
+  # ============================================
+  # MULTIPLE SUBJECTS EXAMPLE
+  # ============================================
+  # You can grant the same role to multiple subjects.
+  # Just add more items to the subjects list.
+  # All subjects get the same permissions from the role.
+  # ============================================
+  # - kind: User
+  #   name: developer@example.com
+  #   apiGroup: rbac.authorization.k8s.io  # Required for User/Group
+  # - kind: Group
+  #   name: developers
+  #   apiGroup: rbac.authorization.k8s.io
+
+roleRef:
+  # ============================================
+  # ROLE REFERENCE - WHICH ROLE TO GRANT
+  # ============================================
+  # This specifies which Role (or ClusterRole) to grant to the subjects.
+  # The roleRef is IMMUTABLE - cannot be changed after creation.
+  # Must match EXACTLY: name, kind, and apiGroup.
+  #
+  # Important: RoleBinding can reference ClusterRole!
+  # But it still only grants permissions in RoleBinding's namespace.
+  # ============================================
+  kind: Role                    # Must be "Role" or "ClusterRole"
+                                 # Role = namespace-scoped role
+                                 # ClusterRole = cluster-wide role (but still namespace-scoped when bound)
+  name: pod-reader              # Name of the Role
+                                 # MUST EXIST - if doesn't exist, no permissions granted
+                                 # Check with: kubectl get role pod-reader
+                                 # Must match exactly (case-sensitive)
+  apiGroup: rbac.authorization.k8s.io  # Always this value for RBAC
+                                        # Cannot be changed
+                                        # This is the API group for RBAC resources
+  
+  # ============================================
+  # HOW ROLEBINDINGS WORK - TEACHING POINTS:
+  # ============================================
+  # 1. RoleBinding connects Role to Subjects
+  #    - Role defines WHAT (permissions)
+  #    - Subjects define WHO (service accounts, users, groups)
+  #    - RoleBinding connects them together
+  #
+  # 2. Subjects get ALL permissions in the Role
+  #    - If Role has 3 rules, subjects get all 3
+  #    - Cannot grant partial permissions
+  #    - Create separate Roles for different permission sets
+  #
+  # 3. RoleBinding is namespace-scoped
+  #    - Even if referencing ClusterRole, only grants in this namespace
+  #    - Must be in same namespace as Role
+  #
+  # 4. Multiple RoleBindings can reference same Role
+  #    - Different subjects can have same permissions
+  #    - Example: dev-sa and prod-sa both get pod-reader role
+  #
+  # 5. This specific binding:
+  #    - Grants "pod-reader" role to "my-service-account"
+  #    - my-service-account can now read pods in default namespace
+  #    - Only applies to default namespace (namespace-scoped)
+  #
+  # CREATION ORDER (IMPORTANT):
+  # Step 1: Create ServiceAccount (service-account.yaml)
+  # Step 2: Create Role (role-pod-reader.yaml)
+  # Step 3: Create RoleBinding (this file)
+  # Step 4: Use in pod: serviceAccountName: my-service-account
+  #
+  # COMMON MISTAKES:
+  # - Creating RoleBinding before Role exists (no permissions granted)
+  # - RoleBinding in different namespace than Role (won't work)
+  # - Typo in role name (pod-reader vs pod-readers)
+  # - Typo in service account name
+  # - Forgetting namespace for ServiceAccount subject
+  #
+  # TESTING:
+  # 1. Check if binding exists: kubectl get rolebinding read-pods
+  # 2. Check permissions: kubectl auth can-i get pods --as=system:serviceaccount:default:my-service-account
+  # 3. Create pod with service account and test API access
+  # ============================================
+

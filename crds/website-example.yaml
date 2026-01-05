@@ -1,0 +1,45 @@
+# ============================================
+# Custom Resource Example
+# ============================================
+# This is an instance of the Website CRD.
+# It demonstrates how to use custom resources.
+#
+# Prerequisites:
+# - Website CRD must exist
+#   kubectl apply -f website-crd.yaml
+#
+# To apply: kubectl apply -f website-example.yaml
+# To view: kubectl get websites
+# To describe: kubectl describe website my-website
+# ============================================
+
+apiVersion: example.com/v1      # API group and version (from CRD)
+kind: Website                    # Kind name (from CRD)
+metadata:
+  name: my-website              # Resource name
+  namespace: default           # Namespace (if CRD is Namespaced)
+  labels:
+    app: website
+    environment: production
+spec:
+  # ============================================
+  # Spec Fields
+  # ============================================
+  # These fields are defined in the CRD schema.
+  # Kubernetes validates against the schema.
+  # ============================================
+  domain: example.com           # Domain name (required, string)
+  replicas: 3                   # Number of replicas (1-10, default: 1)
+  image: nginx:1.21           # Container image (default: nginx:latest)
+  port: 80                      # Port number (1-65535, default: 80)
+
+# ============================================
+# Status Field
+# ============================================
+# Status is usually managed by controllers.
+# You typically don't set this manually.
+# ============================================
+# status:
+#   phase: Running
+#   url: https://example.com
+

@@ -1,0 +1,90 @@
+# ============================================
+# ClusterRole Example - Admin
+# ============================================
+# ClusterRoles define cluster-wide permissions.
+# This example shows an admin role with full access.
+#
+# What this demonstrates:
+# 1. ClusterRole structure
+# 2. Cluster-wide permissions
+# 3. Wildcard verbs and resources
+# 4. Cluster-scoped resources
+#
+# To apply: kubectl apply -f clusterrole-admin.yaml
+# To view: kubectl get clusterroles
+# ============================================
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cluster-admin            # ClusterRole name (cluster-wide, no namespace)
+  labels:
+    purpose: administration
+rules:
+  # ============================================
+  # Rule 1: Full Access to All Resources
+  # ============================================
+  # Wildcard (*) grants access to everything.
+  # Use with extreme caution!
+  # ============================================
+  - apiGroups:
+    - "*"                       # All API groups
+    resources:
+    - "*"                       # All resources
+    verbs:
+    - "*"                       # All verbs (get, list, create, update, delete, etc.)
+  
+  # ============================================
+  # Rule 2: Access to Non-Resource URLs
+  # ============================================
+  # Allows access to non-resource endpoints
+  # (like /healthz, /version).
+  # ============================================
+  - nonResourceURLs:
+    - "*"                       # All non-resource URLs
+    verbs:
+    - "*"                       # All verbs
+  
+  # ============================================
+  # More Restrictive Example
+  # ============================================
+  # Instead of wildcards, be specific:
+  # ============================================
+  # - apiGroups:
+  #   - ""
+  #   resources:
+  #   - pods
+  #   - services
+  #   - deployments
+  #   verbs:
+  #   - get
+  #   - list
+  #   - create
+  #   - update
+  #   - delete
+  #
+  # - apiGroups:
+  #   - apps
+  #   resources:
+  #   - deployments
+  #   - replicasets
+  #   verbs:
+  #   - "*"
+  
+  # ============================================
+  # How ClusterRoles Work:
+  # ============================================
+  # 1. ClusterRoles are cluster-wide
+  # 2. Can grant access to cluster-scoped resources
+  # 3. Can grant access across all namespaces
+  # 4. Bound using ClusterRoleBinding
+  #
+  # This ClusterRole:
+  # - Grants full access to everything
+  # - Equivalent to built-in cluster-admin
+  # - Use only for cluster administrators
+  #
+  # ⚠️ WARNING: This is very powerful!
+  # Only grant to trusted administrators.
+  # ============================================
+

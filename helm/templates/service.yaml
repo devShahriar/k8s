@@ -1,0 +1,28 @@
+# ============================================
+# Helm Template - Service
+# ============================================
+# Helm template for Kubernetes Service.
+#
+# Location: templates/service.yaml
+# ============================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "my-chart.fullname" . }}
+  labels:
+    {{- include "my-chart.labels" . | nindent 4 }}
+  {{- with .Values.service.annotations }}  # Conditional annotations
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort | default 80 }}
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ include "my-chart.name" . }}
+

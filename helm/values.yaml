@@ -1,0 +1,250 @@
+# ============================================
+# Helm values.yaml Example - TEACHING GUIDE
+# ============================================
+# values.yaml is the CONFIGURATION file for your Helm chart.
+# Think of it like a .env file or config.properties.
+# It contains DEFAULT values that can be overridden.
+#
+# Key Concepts:
+# - Default configuration for your chart
+# - Used in templates: {{ .Values.replicaCount }}
+# - Can be overridden: --set, --values, or values files
+# - Nested structure for organization
+#
+# Location: values.yaml (must be in root of chart directory)
+# Usage in templates: {{ .Values.replicaCount }}, {{ .Values.image.repository }}
+# ============================================
+
+# ============================================
+# IMAGE CONFIGURATION
+# ============================================
+# Container image settings - what image to use and how to pull it.
+# This is one of the most common things to customize.
+# ============================================
+image:
+  repository: nginx             # Docker image repository (without tag)
+                                # Examples: nginx, nginx/nginx, myregistry.io/myapp
+                                # In template: {{ .Values.image.repository }}
+                                # Full image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+  pullPolicy: IfNotPresent     # When to pull the image
+                                # Options:
+                                # - Always: Always pull (use for :latest tags)
+                                # - IfNotPresent: Pull if not on node (default, recommended)
+                                # - Never: Never pull (use cached image only)
+                                # Best practice: IfNotPresent for versioned tags, Always for :latest
+  tag: "1.21"                  # Image tag (version)
+                                # Defaults to Chart.yaml appVersion if not specified
+                                # Use quotes for versions like "1.2.3-beta"
+                                # Override: --set image.tag=1.22
+                                # In template: {{ .Values.image.tag | default .Chart.AppVersion }}
+
+# ============================================
+# SERVICE CONFIGURATION
+# ============================================
+# Kubernetes Service settings - how to expose your application.
+# Service provides stable network endpoint for pods.
+# ============================================
+service:
+  type: ClusterIP               # Service type - how service is exposed
+                                # Options:
+                                # - ClusterIP: Internal only (default, most common)
+                                # - NodePort: External access via node IP:port
+                                # - LoadBalancer: Cloud load balancer (AWS, GCP, Azure)
+                                # In template: {{ .Values.service.type }}
+  port: 80                     # Port the service listens on (external)
+                                # Clients connect to this port
+                                # Example: http://service-name:80
+  targetPort: 80                # Port on the container (internal)
+                                # Service forwards traffic to this port
+                                # Usually matches container's listening port
+  annotations: {}              # Service annotations (optional)
+                                # Used for cloud-specific settings
+                                # Example for AWS:
+                                #   service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+                                # Example for GCP:
+                                #   cloud.google.com/load-balancer-type: "Internal"
+
+# ============================================
+# DEPLOYMENT CONFIGURATION
+# ============================================
+# Deployment settings - how many pods to run.
+# This is one of the most commonly overridden values.
+# ============================================
+replicaCount: 3                 # Number of pod replicas to run
+                                # More replicas = higher availability, more resources
+                                # In template: {{ .Values.replicaCount }}
+                                # Override examples:
+                                # - --set replicaCount=5 (command line)
+                                # - values-prod.yaml: replicaCount: 10 (file)
+                                # - values-dev.yaml: replicaCount: 1 (file)
+
+# ============================================
+# Resource Limits
+# ============================================
+# CPU and memory limits for containers.
+# ============================================
+resources:
+  limits:
+    cpu: 500m                   # CPU limit (500 millicores = 0.5 CPU)
+    memory: 512Mi               # Memory limit (512 Mebibytes)
+  requests:
+    cpu: 100m                   # CPU request (100 millicores)
+    memory: 128Mi               # Memory request
+
+# ============================================
+# Node Selector
+# ============================================
+# Schedule pods on specific nodes.
+# ============================================
+nodeSelector: {}                # Node selector labels
+                                # Example: { "disktype": "ssd" }
+
+# ============================================
+# Tolerations
+# ============================================
+# Allow pods on tainted nodes.
+# ============================================
+tolerations: []                 # List of tolerations
+                                # Example:
+                                # - key: "key1"
+                                #   operator: "Equal"
+                                #   value: "value1"
+                                #   effect: "NoSchedule"
+
+# ============================================
+# Affinity
+# ============================================
+# Pod affinity/anti-affinity rules.
+# ============================================
+affinity: {}                    # Affinity rules
+                                # See affinity examples in other tutorials
+
+# ============================================
+# Pod Annotations
+# ============================================
+# Annotations to add to pods.
+# ============================================
+podAnnotations: {}              # Pod annotations
+                                # Example: { "prometheus.io/scrape": "true" }
+
+# ============================================
+# Environment Variables
+# ============================================
+# Environment variables for containers.
+# ============================================
+env: []                         # List of environment variables
+                                # Example:
+                                # - name: ENV_VAR
+                                #   value: "value"
+
+# ============================================
+# ConfigMap
+# ============================================
+# ConfigMap configuration.
+# ============================================
+configMap:
+  enabled: false               # Enable ConfigMap
+  data: {}                     # ConfigMap data
+                                # Example:
+                                # data:
+                                #   nginx.conf: |
+                                #     server {
+                                #         listen 80;
+                                #     }
+
+# ============================================
+# Secrets
+# ============================================
+# Secret configuration.
+# ============================================
+secrets:
+  enabled: false               # Enable secrets
+  data: {}                     # Secret data (base64 encoded)
+
+# ============================================
+# Ingress Configuration
+# ============================================
+# Ingress settings.
+# ============================================
+ingress:
+  enabled: false               # Enable Ingress
+  className: "nginx"           # Ingress class name
+  annotations: {}              # Ingress annotations
+                                # Example:
+                                #   nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - host: example.com        # Hostname
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []                      # TLS configuration
+                                # Example:
+                                # - secretName: example-tls
+                                #   hosts:
+                                #     - example.com
+
+# ============================================
+# Service Account
+# ============================================
+# Service account configuration.
+# ============================================
+serviceAccount:
+  create: true                  # Create service account
+  name: ""                     # Service account name (default: release name)
+  annotations: {}              # Service account annotations
+
+# ============================================
+# HOW values.yaml WORKS - TEACHING POINTS:
+# ============================================
+# 1. Default values are defined here
+#    - These are the "defaults" if nothing is overridden
+#    - Good defaults = chart works out of the box
+#    - Document all values with comments
+#
+# 2. Values are used in templates
+#    - Template syntax: {{ .Values.replicaCount }}
+#    - Nested values: {{ .Values.image.repository }}
+#    - With defaults: {{ .Values.replicaCount | default 1 }}
+#
+# 3. Values can be overridden in THREE ways:
+#    Method 1: Command line (--set)
+#      helm install my-release ./chart --set replicaCount=5
+#      Good for: quick overrides, testing
+#
+#    Method 2: Values file (--values)
+#      helm install my-release ./chart --values prod-values.yaml
+#      Good for: environment-specific configs (dev, staging, prod)
+#
+#    Method 3: Multiple --set flags
+#      helm install my-release ./chart --set replicaCount=5,image.tag=1.22
+#      Good for: multiple overrides at once
+#
+# 4. Override precedence (highest to lowest):
+#    - --set flags (highest priority)
+#    - --values files
+#    - values.yaml (lowest priority, defaults)
+#
+# ACCESSING VALUES IN TEMPLATES:
+# - Simple: {{ .Values.replicaCount }}
+# - Nested: {{ .Values.image.repository }}
+# - With default: {{ .Values.replicaCount | default 1 }}
+# - Conditional: {{- if .Values.configMap.enabled }}
+#
+# COMMON PATTERNS:
+# - values.yaml: Defaults for development
+# - values-prod.yaml: Production overrides (more replicas, resources)
+# - values-dev.yaml: Development overrides (fewer replicas, debug mode)
+#
+# BEST PRACTICES:
+# - Document all values with comments
+# - Use sensible defaults (chart should work without overrides)
+# - Group related values (image.*, service.*, resources.*)
+# - Use enabled flags for optional features (configMap.enabled: false)
+#
+# COMMON MISTAKES:
+# - Typo in value name (replicaCount vs replicaCounts)
+# - Wrong nesting level (image.repository vs imageRepo)
+# - Forgetting to override in production
+# - Hardcoding secrets (use external secret management)
+# ============================================
+

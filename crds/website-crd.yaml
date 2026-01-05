@@ -1,0 +1,194 @@
+# ============================================
+# Custom Resource Definition (CRD) Example
+# ============================================
+# This CRD defines a new "Website" resource type
+# that extends the Kubernetes API.
+#
+# What this demonstrates:
+# 1. CRD structure and fields
+# 2. API group and versioning
+# 3. Schema validation
+# 4. Resource naming
+#
+# To apply: kubectl apply -f website-crd.yaml
+# To verify: kubectl get crd
+# To use: Create resources using this CRD (see website-example.yaml)
+# ============================================
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  # ============================================
+  # CRD Name
+  # ============================================
+  # Must be: <plural>.<group>
+  # This becomes the API endpoint.
+  # ============================================
+  name: websites.example.com    # Format: plural.group
+                                 # API endpoint: /apis/example.com/v1/websites
+spec:
+  # ============================================
+  # API Group
+  # ============================================
+  # Groups related resources together.
+  # Usually your domain name (reversed).
+  # ============================================
+  group: example.com            # API group name
+                                 # Full API path: /apis/example.com/v1
+  
+  # ============================================
+  # Versions
+  # ============================================
+  # Multiple versions can be defined.
+  # One version must be storage: true (stored in etcd).
+  # ============================================
+  versions:
+  - name: v1                     # Version name
+    served: true                  # API server serves this version
+    storage: true                 # This version is stored in etcd
+    schema:                       # OpenAPI schema for validation
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              # ============================================
+              # Spec Schema
+              # ============================================
+              # Defines the structure of .spec field.
+              # Kubernetes validates resources against this.
+              # ============================================
+              domain:
+                type: string
+                description: Domain name for the website
+                example: "example.com"
+              replicas:
+                type: integer
+                description: Number of replicas
+                minimum: 1
+                maximum: 10
+                default: 1
+              image:
+                type: string
+                description: Container image to use
+                default: "nginx:latest"
+              port:
+                type: integer
+                description: Port number
+                minimum: 1
+                maximum: 65535
+                default: 80
+          status:
+            type: object
+            properties:
+              # ============================================
+              # Status Schema
+              # ============================================
+              # Defines the structure of .status field.
+              # Usually updated by controllers.
+              # ============================================
+              phase:
+                type: string
+                description: Current phase of the website
+                enum: ["Pending", "Running", "Failed"]
+              url:
+                type: string
+                description: Accessible URL
+    # ============================================
+    # Additional Printer Columns
+    # ============================================
+    # Customize kubectl get output.
+    # ============================================
+    additionalPrinterColumns:
+    - name: Domain
+      type: string
+      description: Website domain
+      jsonPath: .spec.domain
+    - name: Replicas
+      type: integer
+      description: Number of replicas
+      jsonPath: .spec.replicas
+    - name: Phase
+      type: string
+      description: Current phase
+      jsonPath: .status.phase
+    - name: Age
+      type: date
+      jsonPath: .metadata.creationTimestamp
+  
+  # ============================================
+  # Scope
+  # ============================================
+  # Defines if resource is namespaced or cluster-wide.
+  # - Namespaced: Resource exists in a namespace
+  # - Cluster: Resource is cluster-wide
+  # ============================================
+  scope: Namespaced              # Namespaced or Cluster
+  
+  # ============================================
+  # Resource Names
+  # ============================================
+  # Defines how to refer to this resource.
+  # ============================================
+  names:
+    # ============================================
+    # Plural Name
+    # ============================================
+    # Used in API URLs and kubectl commands.
+    # kubectl get websites
+    # ============================================
+    plural: websites             # Plural form (used in API)
+    
+    # ============================================
+    # Singular Name
+    # ============================================
+    # Used in some kubectl commands.
+    # kubectl get website
+    # ============================================
+    singular: website            # Singular form
+    
+    # ============================================
+    # Kind
+    # ============================================
+    # Used in YAML files.
+    # kind: Website
+    # ============================================
+    kind: Website                # Kind name (used in YAML)
+    
+    # ============================================
+    # Short Names
+    # ============================================
+    # Short aliases for kubectl.
+    # kubectl get ws
+    # ============================================
+    shortNames:
+    - ws                         # Short name (optional)
+    - web                        # Another short name
+  
+  # ============================================
+  # Subresources (Optional)
+  # ============================================
+  # Enable status and scale subresources.
+  # ============================================
+  # subresources:
+  #   status: {}                 # Enable /status subresource
+  #   scale:                     # Enable /scale subresource
+  #     specReplicasPath: .spec.replicas
+  #     statusReplicasPath: .status.replicas
+  #     labelSelectorPath: .status.selector
+  
+  # ============================================
+  # How CRDs Work:
+  # ============================================
+  # 1. You create this CRD
+  # 2. Kubernetes API server extends to include /apis/example.com/v1/websites
+  # 3. You can create Website resources
+  # 4. Controllers watch and act on Website resources
+  #
+  # After creating this CRD:
+  # - kubectl get websites (works!)
+  # - kubectl api-resources | grep website (shows up!)
+  # - Can create Website resources (see website-example.yaml)
+  # ============================================
+

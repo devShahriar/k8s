@@ -1,0 +1,56 @@
+# ============================================
+# Headless Service Example
+# ============================================
+# Headless services don't have a ClusterIP.
+# They return individual pod IPs instead.
+# Used for StatefulSets and service discovery.
+#
+# What this demonstrates:
+# 1. Headless service configuration
+# 2. Direct pod access
+# 3. DNS resolution to pod IPs
+# ============================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-headless
+  labels:
+    app: nginx
+spec:
+  # ============================================
+  # ClusterIP: None
+  # ============================================
+  # Makes this a headless service.
+  # No ClusterIP is assigned.
+  # DNS returns individual pod IPs.
+  # ============================================
+  clusterIP: None              # Headless service (no ClusterIP)
+  
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  
+  selector:
+    app: nginx
+  
+  # ============================================
+  # How Headless Services Work:
+  # ============================================
+  # 1. No ClusterIP assigned
+  # 2. DNS query returns all pod IPs
+  # 3. Client can connect directly to pods
+  # 4. Useful for StatefulSets
+  #
+  # DNS Resolution:
+  # - nginx-headless returns: pod1-ip, pod2-ip, pod3-ip
+  # - nginx-headless.default.svc.cluster.local
+  #
+  # Use Cases:
+  # - StatefulSets (stable network identity)
+  # - Service discovery (get all pod IPs)
+  # - Direct pod-to-pod communication
+  # ============================================
+

@@ -1,0 +1,88 @@
+# ============================================
+# Network Policy - Allow Specific Pods
+# ============================================
+# This policy allows specific pods to communicate
+# while blocking others.
+#
+# What this demonstrates:
+# 1. Allowing ingress from specific pods
+# 2. Allowing egress to specific pods
+# 3. Port-based rules
+# 4. Label-based selection
+# ============================================
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-to-backend
+  namespace: default
+spec:
+  # ============================================
+  # Apply to Backend Pods
+  # ============================================
+  # This policy applies to pods with app=backend label.
+  # ============================================
+  podSelector:
+    matchLabels:
+      app: backend             # Only backend pods
+  
+  policyTypes:
+  - Ingress
+  - Egress
+  
+  ingress:
+  # ============================================
+  # Allow Ingress from Frontend
+  # ============================================
+  # Allows frontend pods to connect to backend.
+  # ============================================
+  - from:
+    - podSelector:
+        matchLabels:
+          app: frontend         # Only from frontend pods
+    ports:
+    - protocol: TCP
+      port: 8080                # Only port 8080
+  
+  # ============================================
+  # Allow Ingress from Same Pods
+  # ============================================
+  # Allows backend pods to communicate with each other.
+  # ============================================
+  - from:
+    - podSelector:
+        matchLabels:
+          app: backend          # From other backend pods
+    ports:
+    - protocol: TCP
+      port: 8080
+  
+  egress:
+  # ============================================
+  # Allow Egress to Database
+  # ============================================
+  # Allows backend to connect to database.
+  # ============================================
+  - to:
+    - podSelector:
+        matchLabels:
+          app: database         # To database pods
+    ports:
+    - protocol: TCP
+      port: 5432                # PostgreSQL port
+  
+  # ============================================
+  # Allow DNS Resolution
+  # ============================================
+  # Allows pods to resolve DNS (usually required).
+  # ============================================
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system     # kube-system namespace
+    ports:
+    - protocol: UDP
+      port: 53                  # DNS port
+    - protocol: TCP
+      port: 53
+

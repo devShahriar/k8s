@@ -38,6 +38,22 @@ This repository covers the following Kubernetes topics with practical examples:
 
 12. **[Horizontal Pod Autoscaler (HPA)](./hpa/README.md)** - Automatically scale pods based on metrics
 
+### Security & Access Control
+
+13. **[RBAC](./rbac/README.md)** - Role-Based Access Control for Kubernetes resources
+
+### Advanced Networking
+
+14. **[Advanced Networking](./advanced-networking/README.md)** - Network Policies, Headless Services, and more
+
+### Customization & Extension
+
+15. **[Custom Resource Definitions (CRDs)](./crds/README.md)** - Extend Kubernetes API with custom resources
+
+### Package Management
+
+16. **[Helm](./helm/README.md)** - Package manager for Kubernetes with charts and releases
+
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -95,6 +111,17 @@ We recommend following this order for beginners:
 ### Automation
 
 11. **HPA** - Automatic scaling
+
+### Security
+
+12. **RBAC** - Understand access control and permissions
+13. **Service Accounts** - Pod identities and authentication
+
+### Advanced Topics
+
+14. **Advanced Networking** - Network Policies and advanced networking
+15. **CRDs** - Extend Kubernetes with custom resources
+16. **Helm** - Package and deploy applications
 
 ## 📝 Notes
 

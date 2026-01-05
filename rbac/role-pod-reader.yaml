@@ -1,0 +1,151 @@
+# ============================================
+# Role Example - Pod Reader - TEACHING GUIDE
+# ============================================
+# Roles define WHAT can be done (permissions) within a namespace.
+# Think of it like a job description: "This role can read pods"
+#
+# Key Concepts:
+# - Roles are NAMESPACE-SCOPED (only work in one namespace)
+# - Roles define permissions but don't grant them (RoleBinding does that)
+# - Multiple rules = UNION (all rules apply, OR logic)
+# - Empty verbs list = NO permissions
+#
+# Role vs ClusterRole:
+# - Role: Namespace-scoped (this namespace only)
+# - ClusterRole: Cluster-wide (all namespaces, cluster resources)
+#
+# To apply: kubectl apply -f role-pod-reader.yaml
+# To view: kubectl get roles
+# To check details: kubectl describe role pod-reader
+# ============================================
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name:
+    pod-reader # Role name - must be unique in namespace
+    # Can have multiple roles: pod-reader, pod-writer, admin
+  namespace:
+    default # CRITICAL: Role only works in THIS namespace
+    # Cannot access resources in "production" or other namespaces
+    # This is namespace-scoped (unlike ClusterRole)
+  labels:
+    purpose: read-only # Labels help organize roles (optional)
+rules:
+  # ============================================
+  # RULE 1: Read Pods
+  # ============================================
+  # This rule allows reading pods in the default namespace.
+  # It's the most common pattern - granting read access.
+  # ============================================
+  - apiGroups:
+      - "" # Empty string = Core Kubernetes API group
+        # This is for built-in resources: pods, services, configmaps, secrets
+        # For custom resources, use: ["apps"], ["networking.k8s.io"]
+        # Examples:
+        # - "" = pods, services, configmaps (core)
+        # - ["apps"] = deployments, replicasets, daemonsets
+        # - ["networking.k8s.io"] = networkpolicies, ingresses
+    resources:
+      - pods # Resource type you want to control access to
+        # Common resources: pods, services, deployments, configmaps, secrets
+        # Must match exactly: "pods" not "pod", "deployments" not "deployment"
+        # Check with: kubectl api-resources
+    verbs:
+      - get # Get ONE specific resource
+        # Example: kubectl get pod my-pod (requires get verb)
+        # Without this: "forbidden: cannot get pods"
+      - list # List ALL resources of this type
+        # Example: kubectl get pods (requires list verb)
+        # Shows all pods in namespace
+      - watch # Watch for changes (real-time updates)
+        # Example: kubectl get pods -w (requires watch verb)
+        # Used by kubectl, dashboard, monitoring tools
+        # Common verbs: get, list, create, update, patch, delete, watch, *
+        # * = all verbs (DANGEROUS - grants full access)
+
+  # ============================================
+  # RULE 2: Read Pod Logs (Subresource)
+  # ============================================
+  # Subresources are nested resources under a parent resource.
+  # Examples: pods/log, pods/status, pods/exec
+  # This rule allows reading logs from a SPECIFIC pod.
+  # ============================================
+  - apiGroups:
+      - ""
+    resources:
+      - pods # Parent resource (must be pods for logs subresource)
+    resourceNames: # OPTIONAL: Restricts to specific resource names
+      - my-pod # Only THIS specific pod named "my-pod"
+        # Without resourceNames: can read logs from ANY pod
+        # With resourceNames: ONLY the listed pods
+        # Useful for: restricting access to specific resources
+    verbs:
+      - get # Get the log
+      - list # List logs (if applicable)
+    subresources:
+      - log # Subresource: pods/log
+        # This allows: kubectl logs my-pod
+        # Other subresources: status, exec, portforward
+        # Without this subresource: cannot read logs even with get verb
+
+  # ============================================
+  # RULE 3: Read Pod Status
+  # ============================================
+  # Allows reading the status of pods (Running, Pending, Failed, etc.)
+  # Status is a subresource, separate from the pod itself.
+  # This is a security feature - can read status but not modify pod.
+  # ============================================
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get # Get the status
+    subresources:
+      - status # Subresource: pods/status
+        # Allows reading pod status: kubectl get pod my-pod -o yaml (status section)
+        # Does NOT allow modifying the pod spec
+        # Common pattern: read-only access to status
+
+  # ============================================
+  # HOW ROLES WORK - TEACHING POINTS:
+  # ============================================
+  # 1. Role defines WHAT can be done (permissions)
+  #    - This role allows: reading pods, reading logs, reading status
+  #    - This role does NOT allow: creating, updating, deleting pods
+  #
+  # 2. RoleBinding defines WHO can do it (grants role to subjects)
+  #    - Role alone does nothing - must be bound to ServiceAccount/User
+  #
+  # 3. Role is namespace-scoped
+  #    - Only works in "default" namespace
+  #    - Cannot access pods in "production" namespace
+  #    - Use ClusterRole for cluster-wide access
+  #
+  # 4. Multiple rules = UNION (OR logic)
+  #    - All rules apply
+  #    - If ANY rule allows it, permission is granted
+  #
+  # 5. What this role allows:
+  #    - kubectl get pods (list verb)
+  #    - kubectl get pod my-pod (get verb)
+  #    - kubectl logs my-pod (log subresource)
+  #    - kubectl get pod my-pod -o yaml (status subresource)
+  #
+  # 6. What this role does NOT allow:
+  #    - kubectl create pod (no create verb)
+  #    - kubectl delete pod (no delete verb)
+  #    - kubectl get pods -n production (different namespace)
+  #
+  # COMMON MISTAKES:
+  # - Wrong apiGroup (use "" for core resources)
+  # - Wrong resource name (pods not pod, deployments not deployment)
+  # - Missing verbs (empty verbs = no permissions)
+  # - Forgetting subresources (need subresources for logs, status, exec)
+  # - Creating RoleBinding before Role exists
+  #
+  # TESTING:
+  # kubectl auth can-i get pods --as=system:serviceaccount:default:my-service-account
+  # kubectl auth can-i create pods --as=system:serviceaccount:default:my-service-account
+  # ============================================
